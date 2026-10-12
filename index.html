@@ -12,8 +12,58 @@
 
 <div class="app">
 
+  <!-- ─────────────── home ─────────────── -->
+  <section id="screen-home" class="screen is-active">
+    <header class="masthead">
+      <div class="masthead__mark" aria-hidden="true">
+        <span style="--c:#f5423c">?</span><span style="--c:#ffd028">!</span><span style="--c:#3b7bf7">?</span>
+      </div>
+      <h1>Endless Quiz</h1>
+      <p class="masthead__tag">How high can you climb?</p>
+      <span class="purse"><i class="coin" aria-hidden="true"></i><b id="home-coins">100</b> coins</span>
+    </header>
+
+    <div class="choices">
+      <button id="go-climb" class="choice" type="button">
+        <span class="choice__ladder" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="choice__body">
+          <span class="choice__name">The Climb</span>
+          <span class="choice__sub" id="home-climb-sub">20 rungs, a safety net every 4</span>
+        </span>
+        <span class="choice__go" aria-hidden="true">&rsaquo;</span>
+      </button>
+
+      <button id="go-daily" class="choice" type="button" data-soon>
+        <span class="choice__cal" aria-hidden="true">
+          <i class="choice__cal-top"></i>
+          <i class="choice__cal-dot"></i><i class="choice__cal-dot"></i>
+          <i class="choice__cal-dot"></i><i class="choice__cal-dot is-on"></i>
+        </span>
+        <span class="choice__body">
+          <span class="choice__name">Daily Quiz <em class="soon">Soon</em></span>
+          <span class="choice__sub">10 questions, the same for everyone</span>
+        </span>
+        <span class="choice__go" aria-hidden="true">&rsaquo;</span>
+      </button>
+
+      <button id="go-quick" class="choice" type="button" data-soon>
+        <span class="choice__abc" aria-hidden="true"><i style="--k:var(--a)"></i><i style="--k:var(--b)"></i><i style="--k:var(--c)"></i></span>
+        <span class="choice__body">
+          <span class="choice__name">Quick Play <em class="soon">Soon</em></span>
+          <span class="choice__sub">Pick how many questions and how hard</span>
+        </span>
+        <span class="choice__go" aria-hidden="true">&rsaquo;</span>
+      </button>
+    </div>
+
+    <footer class="menu-foot">
+      <button id="how-to" class="btn btn--ghost" type="button">How to play</button>
+      <button id="settings" class="btn btn--ghost" type="button" data-soon>Settings</button>
+    </footer>
+  </section>
+
   <!-- ─────────────── question ─────────────── -->
-  <section id="screen-quiz" class="screen is-active">
+  <section id="screen-quiz" class="screen">
     <header class="topbar">
       <button id="back" class="btn btn--ghost" type="button">&larr; Menu</button>
       <div class="topbar__title">
@@ -57,6 +107,19 @@
   </section>
 
 </div>
+
+<dialog id="how-dialog" class="sheet" aria-labelledby="how-title">
+  <h3 id="how-title" class="sheet__title">How to play</h3>
+  <ul class="sheet__list">
+    <li><b>Climb 20 rungs.</b> Each right answer takes you up one. The questions get harder as you go.</li>
+    <li><b>Safety nets at 4, 8, 12 and 16.</b> Get one wrong and you fall back to the last net you passed.</li>
+    <li><b>Earn coins</b> for every right answer. Harder questions pay more.</li>
+    <li><b>Stuck? Use a 50/50</b> to remove two wrong answers. It costs coins, and the price doubles every time you use it in a climb.</li>
+  </ul>
+  <form method="dialog"><button class="btn btn--primary btn--wide">Got it</button></form>
+</dialog>
+
+<p id="toast" class="toast" role="status" hidden></p>
 
 <script src="js/questions.js"></script>
 <script src="js/app.js"></script>

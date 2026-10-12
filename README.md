@@ -3,15 +3,27 @@
 A quiz game in the same visual style as Color Match & Merge: bright sky,
 thick ink outlines, hard drop shadows.
 
-**Status: design prototype.** One question screen, a handful of sample
-questions, nothing saved between visits.
+**Status: design prototype.** A home screen and the Climb, a handful of
+sample questions, nothing saved between visits.
 
 Open `index.html` in a browser. No build step or server is needed.
 
 <p>
+  <img src="screenshots/home.png" width="260" alt="The home screen">
   <img src="screenshots/climb.png" width="260" alt="Rung 14 of the climb">
   <img src="screenshots/fall.png" width="260" alt="A wrong answer dropping back to the safety net">
 </p>
+
+## Home
+
+Three ways in, in the same card style as Color Match & Merge:
+
+- **The Climb** is playable. Its little ladder icon fills up with your best
+  climb, and the card offers to continue a climb you left mid-way.
+- **Daily Quiz** and **Quick Play** are marked *Soon* and only say so when tapped.
+- **How to play** explains the rules. **Settings** is not built yet.
+
+Your coin balance sits under the title.
 
 ## The Climb
 
@@ -42,11 +54,11 @@ last one you passed, or to the bottom if you haven't reached rung 4 yet.
 ## Layout
 
 ```
-index.html        markup
+index.html        markup: home, the question screen, how-to dialog
 styles.css        all styling (tokens shared with Color Match & Merge)
 fonts.css         Baloo 2 + Nunito, inlined (copied from Color Match & Merge)
 js/questions.js   categories, difficulties, sample questions
-js/app.js         the Climb: ladder, coins, 50/50, answering
+js/app.js         screens, the Climb: ladder, coins, 50/50, answering
 ```
 
 Questions are stored as `{ id, difficulty, category, q, answers, why }`, with

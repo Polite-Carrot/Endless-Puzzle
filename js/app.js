@@ -30,6 +30,8 @@
     diff: $('q-diff'), text: $('q-text'), answers: $('answers'),
     result: $('result'), mark: $('result-mark'), resultTitle: $('result-title'),
     why: $('result-why'), next: $('next'),
+    homeCoins: $('home-coins'), climbSub: $('home-climb-sub'),
+    toast: $('toast'), how: $('how-dialog'),
   };
 
   const state = {
@@ -40,6 +42,7 @@
     usedFifty: false,   // this question
     answered: false,
     finished: false,
+    best: 0,            // highest rung ever cleared
     item: null,
     seen: new Set(),
   };
@@ -203,6 +206,7 @@
       state.streak += 1;
       replay(els.coins.closest('.stat'), 'is-bump');
       title = 'Correct! +' + earned;
+      state.best = Math.max(state.best, state.rung);
       if (state.rung === RUNGS) {
         state.finished = true;
         title = 'You reached the top!';
@@ -242,17 +246,69 @@
 
   els.fifty.addEventListener('click', useFifty);
 
-  els.next.addEventListener('click', () => {
+  function newClimbIfDone() {
     if (state.finished) {
       state.finished = false;
       state.rung = 1;
       state.fiftyUses = 0;
     }
+  }
+
+  els.next.addEventListener('click', () => {
+    newClimbIfDone();
     show();
+  });
+
+  /* ───────── screens ───────── */
+
+  function goTo(name) {
+    document.querySelectorAll('.screen').forEach((s) => {
+      s.classList.toggle('is-active', s.id === 'screen-' + name);
+    });
+    document.querySelector('.app').scrollTo({ top: 0 });
+    if (name === 'home') drawHome();
+  }
+
+  function drawHome() {
+    els.homeCoins.textContent = state.coins;
+    const climbing = state.item && !state.finished;
+    if (climbing) {
+      els.climbSub.textContent = 'Continue from rung ' + state.rung + ' of ' + RUNGS;
+    } else if (state.best) {
+      els.climbSub.textContent = 'Best: rung ' + state.best + ' of ' + RUNGS;
+    } else {
+      els.climbSub.textContent = RUNGS + ' rungs, a safety net every 4';
+    }
+    // the icon's five rungs fill with the best climb, a fifth of the ladder each
+    const lit = Math.round(state.best / RUNGS * 5);
+    document.querySelectorAll('.choice__ladder i').forEach((r, i) => {
+      r.classList.toggle('is-on', i < lit);
+      r.classList.toggle('is-top', i === 4 && state.best >= RUNGS);
+    });
+  }
+
+  let toastTimer = 0;
+  function toast(text) {
+    els.toast.textContent = text;
+    els.toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { els.toast.hidden = true; }, 1800);
+  }
+
+  $('go-climb').addEventListener('click', () => {
+    goTo('quiz');
+    // Back from the menu mid-question: leave it exactly as it was.
+    if (!state.item || state.answered) { newClimbIfDone(); show(); }
+  });
+  $('back').addEventListener('click', () => goTo('home'));
+  $('how-to').addEventListener('click', () => els.how.showModal());
+  document.querySelectorAll('[data-soon]').forEach((b) => {
+    b.addEventListener('click', () => toast('Coming soon'));
   });
 
   // Keyboard: 1–4 or A–D to answer, H for the 50/50, Enter / Space for next.
   document.addEventListener('keydown', (e) => {
+    if (!$('screen-quiz').classList.contains('is-active') || els.how.open) return;
     const k = e.key.toUpperCase();
     const pick = '1234'.indexOf(k) >= 0 ? '1234'.indexOf(k) : KEYS.indexOf(k);
     if (!state.answered && pick >= 0) {
@@ -266,5 +322,5 @@
     }
   });
 
-  show();
+  drawHome();
 })();

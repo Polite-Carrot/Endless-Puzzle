@@ -82,6 +82,8 @@ body {
 }
 
 .screen { display: none; flex: 1; min-height: 0; }
+/* the menu sits in the middle of a tall phone rather than hugging the top */
+#screen-home.is-active { justify-content: center; }
 .screen.is-active {
   display: flex;
   flex-direction: column;
@@ -123,6 +125,252 @@ body {
 }
 .btn--ghost:hover:not(:disabled) { background: #fff; }
 .btn--wide { width: 100%; font-size: 19px; padding: 13px 18px; }
+
+/* ───────── home (as in the jar game) ───────── */
+
+.masthead { text-align: center; margin: 10px 0 26px; }
+
+/* Three bobbing speech bubbles — the jar game's three jars, as questions. */
+.masthead__mark {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding-top: 14px;
+  margin-bottom: 14px;
+}
+.masthead__mark span {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px; height: 34px;
+  border-radius: 12px;
+  border: var(--stroke) solid var(--ink);
+  background: var(--c);
+  color: #fff;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+  line-height: 1;
+  -webkit-text-stroke: 4px var(--ink);
+  paint-order: stroke fill;
+  box-shadow: 0 3px 0 var(--ink);
+  animation: bob 2.4s ease-in-out infinite;
+}
+/* the bubble's tail */
+.masthead__mark span::after {
+  content: "";
+  position: absolute;
+  left: 7px; bottom: -9px;
+  width: 10px; height: 10px;
+  background: var(--c);
+  border: var(--stroke) solid var(--ink);
+  border-top: 0; border-right: 0;
+  border-radius: 0 0 0 4px;
+  transform: skewY(-35deg);
+}
+.masthead__mark span:nth-child(2) { animation-delay: .18s; }
+.masthead__mark span:nth-child(3) { animation-delay: .36s; }
+@keyframes bob { 50% { transform: translateY(-8px) rotate(-4deg); } }
+
+.masthead h1 {
+  margin: 0;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: clamp(46px, 13vw, 76px);
+  line-height: .98;
+  letter-spacing: -.01em;
+  color: #fff;
+  -webkit-text-stroke: 7px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 7px 0 var(--ink);
+  text-wrap: balance;
+}
+.masthead__tag {
+  margin: 14px auto 0;
+  max-width: 30ch;
+  font-weight: 700;
+  font-size: 17px;
+}
+.purse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 3px 13px 3px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: var(--paper);
+  box-shadow: 0 3px 0 var(--ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+.purse b { font-family: "Baloo 2", sans-serif; font-size: 17px; font-variant-numeric: tabular-nums; }
+
+.choices {
+  display: grid;
+  gap: 16px;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 16px 18px;
+  text-align: left;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 6px 0 var(--ink);
+  transition: transform .09s ease, box-shadow .09s ease, background .14s ease;
+}
+.choice:hover { background: var(--paper-warm); }
+.choice:active { transform: translateY(6px); box-shadow: 0 0 0 var(--ink); }
+.choice:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+.choice__body { flex: 1; min-width: 0; line-height: 1.2; }
+.choice__name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 25px;
+}
+.choice__sub { display: block; color: var(--ink-soft); font-size: 14.5px; font-weight: 700; }
+.choice__go {
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 30px;
+  color: var(--ink-soft);
+  line-height: 1;
+}
+.soon {
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: var(--gold);
+  font-family: "Nunito", sans-serif;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  line-height: 1.5;
+}
+
+/* A little ladder whose rungs fill with your best climb. */
+.choice__ladder {
+  flex: 0 0 46px;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: space-between;
+  width: 46px;
+  height: 62px;
+  padding: 4px 6px;
+  border-left: var(--stroke) solid var(--ink);
+  border-right: var(--stroke) solid var(--ink);
+  border-radius: 3px;
+}
+.choice__ladder i {
+  height: 7px;
+  border: 2px solid var(--ink);
+  border-radius: 99px;
+  background: #fff;
+}
+.choice__ladder i.is-on { background: var(--accent); }
+.choice__ladder i.is-top { background: var(--gold); }
+
+.choice__cal {
+  position: relative;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 62px;
+  border: 2px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 19px 8px 9px;
+}
+.choice__cal-top {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 13px;
+  background: var(--accent);
+  border-bottom: 2px solid var(--ink);
+  border-radius: 5px 5px 0 0;
+}
+.choice__cal-dot { border-radius: 2px; background: var(--ink-faint); }
+.choice__cal-dot.is-on { background: var(--grass); }
+
+/* Three answer buttons, stacked. */
+.choice__abc {
+  flex: 0 0 46px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  width: 46px;
+  height: 62px;
+}
+.choice__abc i {
+  height: 15px;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  background: linear-gradient(90deg, var(--k) 0 13px, #fff 13px);
+  box-shadow: 0 2px 0 var(--ink);
+}
+
+.menu-foot { display: flex; justify-content: center; gap: 11px; margin-top: 26px; padding-bottom: 6px; }
+
+/* ───────── how to play ───────── */
+
+.sheet {
+  width: min(420px, calc(100vw - 32px));
+  padding: 20px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 6px 0 var(--ink);
+}
+.sheet::backdrop { background: rgba(43, 33, 66, .45); }
+.sheet[open] { animation: rise .3s cubic-bezier(.2, .9, .3, 1.2) both; }
+.sheet__title {
+  margin: 0 0 8px;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 26px;
+}
+.sheet__list { margin: 0 0 18px; padding-left: 20px; font-size: 15.5px; line-height: 1.45; }
+.sheet__list li + li { margin-top: 8px; }
+
+/* ───────── toast ───────── */
+
+.toast {
+  position: fixed;
+  left: 0; right: 0;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  width: fit-content;
+  margin: 0 auto;
+  padding: 9px 18px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 99px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 4px 0 rgba(43, 33, 66, .35);
+  animation: rise .25s ease both;
+  z-index: 10;
+}
+.toast[hidden] { display: none; }
 
 /* ───────── topbar (as in the jar game) ───────── */
 
@@ -467,6 +715,9 @@ body {
 /* ───────── small phones ───────── */
 
 @media (max-width: 380px) {
+  .choice { padding: 13px 14px; gap: 12px; }
+  .choice__name { font-size: 22px; }
+  .choice__sub { font-size: 13.5px; }
   .topbar { padding: 8px 10px; gap: 8px; }
   .topbar .btn { padding: 8px 10px; font-size: 15px; }
   .topbar__title h2 { font-size: 17px; }
