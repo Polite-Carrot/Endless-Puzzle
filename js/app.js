@@ -25,7 +25,7 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 12;
+  const BUILD = 13;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   const FIFTY_BASE = 25;
@@ -762,6 +762,7 @@
     $('quick-ticks').replaceChildren(...QUICK_DIFFS.map((d, i) => {
       const s = document.createElement('span');
       s.textContent = QUICK_NAMES[d];
+      s.style.left = (i / (QUICK_DIFFS.length - 1) * 100) + '%';
       s.classList.toggle('is-on', i === idx);
       s.addEventListener('click', () => { prefs.difficulty = d; persist(); Sound.tap(); drawQuick(); });
       return s;

@@ -994,10 +994,22 @@ body {
 }
 .setting__slider:active::-webkit-slider-thumb { transform: scale(1.08); }
 .setting__slider:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; border-radius: 999px; }
-.setting__ticks { display: flex; justify-content: space-between; padding: 0 4px; margin-top: 2px; }
-.setting__ticks span { font-size: 11px; color: var(--ink-soft); flex: 1; text-align: center; cursor: pointer; }
-.setting__ticks span:first-child { text-align: left; }
-.setting__ticks span:last-child { text-align: right; }
+/* Each label sits exactly under its stop. A range input's stops run from
+   the centre of the thumb at one end to the centre at the other, so the
+   label row is inset by half a thumb (13px) on each side and every label
+   is centred on its own percentage along it — evenly spaced text would
+   drift away from the stops as the slider gets wider, which on an iPad
+   it noticeably did. */
+.setting__ticks { position: relative; height: 18px; margin: 2px 13px 0; }
+.setting__ticks span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
 .setting__ticks span.is-on { color: var(--ink); font-weight: 800; }
 
 .difficulty__blurb {

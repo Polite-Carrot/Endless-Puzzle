@@ -14,7 +14,7 @@ Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Page
 
 **Every release, bump the build number in three places together:** the `?v=`
 on the links in `index.html`, `BUILD` in `js/app.js`, and `version.json`
-(currently 12).
+(currently 13).
 GitHub Pages lets browsers keep files for ten minutes — the page itself
 included — so a phone can keep running an old build. The `?v=` stops a new
 page loading an old stylesheet; `version.json` (fetched uncached on start
