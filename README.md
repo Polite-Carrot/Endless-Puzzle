@@ -4,7 +4,8 @@ A quiz game in the same visual style as Color Match & Merge: bright sky,
 thick ink outlines, hard drop shadows.
 
 **Status: early build.** All three modes, settings and the guide work, on a
-small bank of 40 questions (10 per difficulty) while the shape is settled.
+bank of 80 questions — 20 per difficulty, so every difficulty can deal a
+full 20-question Quick Play game.
 
 Open `index.html` in a browser. No build step or server is needed.
 
@@ -35,8 +36,9 @@ Normal, Hard or Extra Hard. Mixed games run easiest first. No ladder, no
 falling — just a score at the end, and your best for that setting is kept.
 The 50/50 works here too.
 
-With 10 questions per difficulty, asking for 20 of one difficulty gives you
-the 10 there are, and the screen says so.
+Every difficulty has at least 20 questions, so a 20-question game never
+repeats a question. If a difficulty ever has fewer than you ask for, you get
+what there is and the screen says so.
 
 ## Daily Quiz
 
