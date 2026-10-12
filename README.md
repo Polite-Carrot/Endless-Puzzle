@@ -3,7 +3,7 @@
 A quiz game in the same visual style as Color Match & Merge: bright sky,
 thick ink outlines, hard drop shadows.
 
-**Status: early build.** 100 Climb levels, the Daily Quiz, Quick Play with
+**Status: early build.** 100 Climb levels across four difficulty tracks, the Daily Quiz, Quick Play with
 categories and seeds, settings and the guide all work. The bank holds 767
 written and fact-table questions plus endless generated maths — at least 20
 for every category at every difficulty.
@@ -14,7 +14,7 @@ Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Page
 
 **Every release, bump the build number in three places together:** the `?v=`
 on the links in `index.html`, `BUILD` in `js/app.js`, and `version.json`
-(currently 11).
+(currently 12).
 GitHub Pages lets browsers keep files for ten minutes — the page itself
 included — so a phone can keep running an old build. The `?v=` stops a new
 page loading an old stylesheet; `version.json` (fetched uncached on start
@@ -23,7 +23,7 @@ build exists and reload itself onto it, between questions.
 
 <p>
   <img src="screenshots/home.png" width="200" alt="Home">
-  <img src="screenshots/levels.png" width="200" alt="The Climb's 100 levels">
+  <img src="screenshots/levels-hard.png" width="200" alt="The Climb, Hard track">
   <img src="screenshots/climb-question.png" width="200" alt="A Climb question">
   <img src="screenshots/climb-done.png" width="200" alt="A level climbed">
 </p>
@@ -72,20 +72,21 @@ player's own midnight.
 
 ## The Climb
 
-**100 levels**, each a ladder of **20 rungs**, built ahead of time into
-`js/levels.js` by `tools/build-levels.js`. Finish a level to unlock the next.
+**Four tracks — Easy, Normal, Hard and Extra Hard** — picked from tabs along
+the top of the level screen. Each track is its own run of levels with its own
+stars and progress; finish a level to unlock the next one in that track.
+Every track starts with **25 levels** (100 in all), and growing one is a
+one-number change — see **Adding levels** below.
 
-| Level | Easy | Normal | Hard | Extra Hard |
-|------:|-----:|-------:|-----:|-----------:|
-| 1     | 14   | 5      | 1    | 0          |
-| 25    | 6    | 9      | 4    | 1          |
-| 50    | 2    | 7      | 8    | 3          |
-| 75    | 0    | 4      | 10   | 6          |
-| 100   | 0    | 1      | 9    | 10         |
+Each level is a ladder of **20 rungs**, easiest at the bottom. Each track
+shifts its mix from level 1 to its last level:
 
-Levels in between blend smoothly from those anchors. Inside a level the
-rungs run easiest first, so level 1 is fourteen easy questions, five normal
-and one hard one at the very top.
+| Track      | Level 1 (easy/normal/hard/xhard) | Level 25 |
+|------------|----------------------------------|----------|
+| Easy       | 18 / 2 / 0 / 0                   | 12 / 7 / 1 / 0 |
+| Normal     | 6 / 12 / 2 / 0                   | 2 / 12 / 5 / 1 |
+| Hard       | 0 / 6 / 12 / 2                   | 0 / 2 / 12 / 6 |
+| Extra Hard | 0 / 0 / 8 / 12                   | 0 / 0 / 2 / 18 |
 
 **Safety nets** at rungs 4, 8, 12 and 16: a wrong answer drops you to the
 last net you passed. **Every rung has a backup question**, so the way back
@@ -94,29 +95,43 @@ question, the second its backup, and after that a stand-in of the same
 difficulty from the bank.
 
 **Stars:** no falls ★★★, one or two ★★, more ★. Replaying keeps your best.
-A climb in progress is saved — rung, falls and all.
+A climb in progress is saved — track, level, rung, falls and all. Stars are
+saved per track and level, as `normal-4`.
 
-### Building the levels
+### Adding levels
 
-    node tools/build-levels.js
+1. Open `tools/build-levels.js`.
+2. Raise `levels` on the track you want to grow — say Easy from 25 to 50.
+3. Run `node tools/build-levels.js`.
 
-Levels are **baked**, not dealt on load. The bank will keep growing, and if
-levels were dealt live, adding one question would reshuffle every level
-after it — including ones people already have stars on. Rebuild only when
-you mean to change the levels.
+**Levels that already exist are kept exactly as they are** — they're read
+back out of `js/levels.js` and only the new ones are dealt — so nobody's
+stars end up on a level that has changed under them. The builder refuses to
+run if a kept level points at a question that has since left the bank.
 
-The builder deals written questions **least recently used first**, so a
-repeat is as far from its last appearance as the bank allows, and spreads
-categories within each level. About one slot in eight is generated maths.
-It prints a report; the current one:
+A track's mix is set by **anchors at level numbers**, not fractions of the
+track, so lengthening a track never changes the levels already in it. Levels
+past the last anchor keep its mix; to make level 50 harder than level 25,
+add an anchor for it, e.g. `[50, 6, 11, 3, 0]` on Easy.
 
-- 4,000 question slots (2,000 rungs × main + backup); 516 generated
-- 656 distinct facts used, each ~5 times across the 100 levels
-- no level asks the same fact twice, even split across main and backup
-- a fact comes back after at least 6 levels, typically 12
+`node tools/build-levels.js --rebuild-all` deals every level again — for
+when you mean to reshuffle everything, before launch say.
 
-More written questions widen that gap — add to the bank, rebuild, and the
-report shows the difference.
+### Why levels are baked
+
+Levels are written out in full, as question references, rather than dealt
+when the game loads. The bank will keep growing, and if levels were dealt
+live, adding one question would reshuffle every level after it. Baked, a
+level stays the level it was.
+
+The builder deals written questions **least recently used first** across
+all four tracks, spreads categories within each level, and never asks the
+same fact twice in a level. About one slot in eight is generated maths. Its
+report, now:
+
+- 4,000 question slots (100 levels × 20 rungs × main + backup); 526 generated
+- 656 distinct written/table facts used, ~5 times each across all tracks
+- within a track, a fact comes back after at least 4 levels (typically 5–9)
 
 ## Coins and the 50/50
 
@@ -216,13 +231,14 @@ manifest.webmanifest  name and icons for installing to a home screen
 version.json      the current build, checked on start to pick up updates
 js/questions.js   categories, difficulties, the hand-written questions
 js/bank.js        fact tables, generators, and the assembled bank  (no DOM)
-js/levels.js      generated — the 100 Climb levels, as question references
+js/levels.js      generated — the Climb's levels per track, as question references
 js/store.js       saving progress, and whether it can be trusted
 js/sound.js       oscillator blips
 js/daily.js       the daily seed, streak and week   (no DOM)
 js/app.js         screens and the shared question screen for all three modes
 tools/check-bank.js    checks every question the bank can make
-tools/build-levels.js  builds js/levels.js, and reports on reuse
+tools/build-levels.js  builds js/levels.js: keeps existing levels, deals new ones,
+                       and reports on reuse
 ```
 
 Questions are stored as `{ id, difficulty, category, q, answers, why }`, with

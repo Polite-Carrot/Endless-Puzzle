@@ -1,7 +1,8 @@
 /* Endless Quiz — screens, and one question screen shared by three modes.
  *
- * The Climb: 100 levels (js/levels.js), each a ladder of 20 rungs that gets
- * harder as it goes. Every fourth rung (4, 8, 12, 16) is a safety net — a
+ * The Climb: four tracks — Easy, Normal, Hard, Extra Hard — each its own run
+ * of levels (js/levels.js), picked from tabs on the level screen. A level is
+ * a ladder of 20 rungs that gets harder as it goes. Every fourth rung (4, 8, 12, 16) is a safety net — a
  * wrong answer drops you back to the last one you passed. Each rung carries
  * a backup question, so the way back up after a fall is fresh: the first
  * time a rung is shown it asks its main question, the second time its
@@ -24,7 +25,7 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 11;
+  const BUILD = 12;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   const FIFTY_BASE = 25;
@@ -69,7 +70,8 @@
     index: 0,
     marks: [],           // daily / quick: true / false per answer
     earned: 0,
-    level: 0,            // climb
+    track: null,         // climb: 'easy' | 'normal' | 'hard' | 'xhard'
+    level: 0,
     rung: 1,
     shown: {},           // climb: rung -> times it has been asked this climb
     falls: 0,
@@ -128,12 +130,24 @@
 
   function fiftyPrice() { return FIFTY_BASE * Math.pow(2, run.fiftyUses); }
 
-  function levelsClimbed() { return Object.keys(saved.levels).length; }
-  function nextLevel() {
-    for (let n = 1; n <= LEVELS.length; n++) if (!saved.levels[n]) return n;
-    return LEVELS.length;
+  // The Climb has four tracks, each its own run of levels (js/levels.js).
+  // Stars are saved per track and level, as 'normal-4'.
+  const TRACKS = DIFF_ORDER.filter((t) => LEVELS[t] && LEVELS[t].length);
+  const trackLength = (t) => LEVELS[t].length;
+  const totalLevels = () => TRACKS.reduce((n, t) => n + trackLength(t), 0);
+  const starsAt = (t, n) => saved.levels[t + '-' + n] || 0;
+  function levelsClimbed(t) {
+    return Object.keys(saved.levels).filter((k) => !t || k.startsWith(t + '-')).length;
   }
-  const unlocked = (n) => n === 1 || !!saved.levels[n - 1] || (saved.climb && saved.climb.level === n);
+  function nextLevel(t) {
+    for (let n = 1; n <= trackLength(t); n++) if (!starsAt(t, n)) return n;
+    return trackLength(t);
+  }
+  const going = (t, n) => !!saved.climb && saved.climb.track === t && saved.climb.level === n;
+  const unlocked = (t, n) => n === 1 || !!starsAt(t, n - 1) || going(t, n);
+  function currentTrack() {
+    return TRACKS.includes(saved.track) ? saved.track : (saved.climb && saved.climb.track) || TRACKS[0];
+  }
   const starsFor = (falls) => (falls === 0 ? 3 : falls <= 2 ? 2 : 1);
 
   /* ───────── screens ───────── */
@@ -161,15 +175,15 @@
 
     const climbed = levelsClimbed();
     const sub = $('home-climb-sub');
-    if (saved.climb) sub.textContent = 'Level ' + saved.climb.level + ' · rung ' + saved.climb.rung + ' of ' + RUNGS;
-    else if (climbed) sub.textContent = climbed + ' of ' + LEVELS.length + ' levels climbed';
-    else sub.textContent = LEVELS.length + ' levels, from easy to brain-melting';
+    if (saved.climb) sub.textContent = QUICK_NAMES[saved.climb.track] + ' level ' + saved.climb.level + ' · rung ' + saved.climb.rung + ' of ' + RUNGS;
+    else if (climbed) sub.textContent = climbed + ' of ' + totalLevels() + ' levels climbed';
+    else sub.textContent = TRACKS.length + ' difficulties · ' + totalLevels() + ' levels';
 
     // the ladder icon's five rungs fill as the levels are climbed
-    const lit = Math.ceil(climbed / LEVELS.length * 5);
+    const lit = Math.ceil(climbed / totalLevels() * 5);
     document.querySelectorAll('.choice__ladder i').forEach((r, i) => {
       r.classList.toggle('is-on', i < lit);
-      r.classList.toggle('is-top', i === 4 && climbed >= LEVELS.length);
+      r.classList.toggle('is-top', i === 4 && climbed >= totalLevels());
     });
 
     // the calendar icon's four squares are the last four days
@@ -198,34 +212,57 @@
   /* ───────── climb levels ───────── */
 
   function drawLevels() {
-    const climbed = levelsClimbed();
-    const stars = Object.values(saved.levels).reduce((a, b) => a + b, 0);
+    const track = currentTrack();
+
+    // the difficulty tabs along the top, each with its progress
+    $('level-tabs').replaceChildren(...TRACKS.map((t) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(t === track));
+      b.style.setProperty('--diff', DIFF_COLOURS[t]);
+      b.innerHTML = '<b></b><small></small>';
+      b.children[0].textContent = QUICK_NAMES[t];
+      b.children[1].textContent = levelsClimbed(t) + '/' + trackLength(t);
+      b.addEventListener('click', () => {
+        if (t === saved.track) return;
+        saved.track = t;
+        persist();
+        Sound.tap();
+        drawLevels();
+      });
+      return b;
+    }));
+
+    const climbed = levelsClimbed(track);
+    const stars = Object.entries(saved.levels).filter(([k]) => k.startsWith(track + '-')).reduce((a, [, s]) => a + s, 0);
     $('levels-note').textContent = climbed
-      ? climbed + ' of ' + LEVELS.length + ' climbed · ' + stars + ' ★'
-      : 'Start at the bottom';
-    const next = nextLevel();
-    const going = saved.climb && saved.climb.level;
+      ? climbed + ' of ' + trackLength(track) + ' climbed · ' + stars + ' ★'
+      : trackLength(track) + ' levels to climb';
+    const next = nextLevel(track);
+    const inProgress = saved.climb && saved.climb.track === track ? saved.climb.level : 0;
     const grid = $('level-grid');
-    grid.replaceChildren(...LEVELS.map((_, i) => {
+    grid.style.setProperty('--diff', DIFF_COLOURS[track]);
+    grid.replaceChildren(...LEVELS[track].map((_, i) => {
       const n = i + 1;
       const li = document.createElement('li');
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tile';
-      b.disabled = !unlocked(n);
-      if (n === going) b.classList.add('is-going');
-      else if (n === next && !going) b.classList.add('is-next');
-      const got = saved.levels[n] || 0;
+      b.disabled = !unlocked(track, n);
+      if (n === inProgress) b.classList.add('is-going');
+      else if (n === next && !inProgress) b.classList.add('is-next');
+      const got = starsAt(track, n);
       b.innerHTML = '<span class="tile__no"></span><span class="tile__stars"></span>';
       b.children[0].textContent = n;
       b.children[1].innerHTML = '★'.repeat(got) + '<span class="off">' + '★'.repeat(3 - got) + '</span>';
-      b.setAttribute('aria-label', 'Level ' + n + (b.disabled ? ', locked' : got ? ', ' + got + ' stars' : ''));
-      b.addEventListener('click', () => startClimb(n));
+      b.setAttribute('aria-label', QUICK_NAMES[track] + ' level ' + n + (b.disabled ? ', locked' : got ? ', ' + got + ' stars' : ''));
+      b.addEventListener('click', () => startClimb(track, n));
       li.appendChild(b);
       return li;
     }));
     // bring the level to play next into view
-    const focus = grid.children[(going || next) - 1];
+    const focus = grid.children[(inProgress || next) - 1];
     if (focus) requestAnimationFrame(() => focus.scrollIntoView({ block: 'center' }));
   }
 
@@ -238,19 +275,20 @@
     });
   }
 
-  function startClimb(level) {
+  function startClimb(track, level) {
     const c = saved.climb;
+    saved.track = track;
     // carrying on where you left off
-    if (c && c.level === level) {
-      if (run.mode === 'climb' && run.level === level && run.item && !run.answered && !run.finished) {
+    if (c && c.track === track && c.level === level) {
+      if (run.mode === 'climb' && run.track === track && run.level === level && run.item && !run.answered && !run.finished) {
         goTo('quiz');
         return;
       }
       resetRun('climb');
-      Object.assign(run, { level, rung: c.rung, shown: c.shown || {}, falls: c.falls || 0, fiftyUses: c.fiftyUses || 0, earned: c.earned || 0, streak: 0 });
+      Object.assign(run, { track, level, rung: c.rung, shown: c.shown || {}, falls: c.falls || 0, fiftyUses: c.fiftyUses || 0, earned: c.earned || 0, streak: 0 });
     } else {
       resetRun('climb');
-      Object.assign(run, { level, rung: 1, shown: {}, falls: 0, streak: 0 });
+      Object.assign(run, { track, level, rung: 1, shown: {}, falls: 0, streak: 0 });
       saveClimb();
     }
     goTo('quiz');
@@ -258,21 +296,22 @@
   }
 
   function saveClimb() {
-    saved.climb = { level: run.level, rung: run.rung, shown: run.shown, falls: run.falls, fiftyUses: run.fiftyUses, earned: run.earned };
+    saved.climb = { track: run.track, level: run.level, rung: run.rung, shown: run.shown, falls: run.falls, fiftyUses: run.fiftyUses, earned: run.earned };
     persist();
   }
 
   // The question for this rung, this time: main, then backup, then a stand-in.
   function climbQuestion() {
-    const [main, backup] = LEVELS[run.level - 1][run.rung - 1];
+    const levelRefs = LEVELS[run.track][run.level - 1];
+    const [main, backup] = levelRefs[run.rung - 1];
     const times = run.shown[run.rung] || 0;
     if (times === 0) return Bank.get(main);
     if (times === 1) return Bank.get(backup);
     const diff = Bank.get(main).difficulty;
-    const own = new Set(LEVELS[run.level - 1].flat());
+    const own = new Set(levelRefs.flat());
     const ownFacts = new Set([...own].map((ref) => Bank.get(ref).fact));
     const pool = Bank.statics.filter((q) => q.difficulty === diff && !ownFacts.has(q.fact));
-    const rand = Bank.rng(Bank.hash(run.level + ':' + run.rung + ':' + times));
+    const rand = Bank.rng(Bank.hash(run.track + ':' + run.level + ':' + run.rung + ':' + times));
     return pool[Math.floor(rand() * pool.length)];
   }
 
@@ -409,9 +448,9 @@
       run.shown[run.rung] = (run.shown[run.rung] || 0) + 1;
       saveClimb();
       // the same layout every time this question appears on this rung
-      order = shuffle(item.answers, Bank.rng(Bank.hash(item.id + ':' + run.level)));
+      order = shuffle(item.answers, Bank.rng(Bank.hash(item.id + ':' + run.track + ':' + run.level)));
       els.title.textContent = 'Rung ' + run.rung;
-      els.sub.textContent = 'Level ' + run.level;
+      els.sub.textContent = QUICK_NAMES[run.track] + ' · level ' + run.level;
     } else {
       ({ item, order } = run.queue[run.index]);
       els.title.textContent = (run.index + 1) + ' of ' + run.queue.length;
@@ -509,10 +548,11 @@
         if (run.rung === RUNGS) {
           run.finished = true;
           last = true;
-          title = 'Level ' + run.level + ' climbed!';
+          title = QUICK_NAMES[run.track] + ' level ' + run.level + ' climbed!';
           sound = 'win';
           const stars = starsFor(run.falls);
-          saved.levels[run.level] = Math.max(saved.levels[run.level] || 0, stars);
+          const key = run.track + '-' + run.level;
+          saved.levels[key] = Math.max(saved.levels[key] || 0, stars);
           saved.climb = null;
         } else {
           if (CHECKPOINTS.includes(run.rung)) extra = 'Safety net reached — you can’t fall below rung ' + run.rung + ' now.';
@@ -597,7 +637,7 @@
     const right = run.marks.filter(Boolean).length;
     const total = run.marks.length;
 
-    $('fin-mode').textContent = climb ? 'Level ' + run.level : MODE_NAMES[run.mode];
+    $('fin-mode').textContent = climb ? QUICK_NAMES[run.track] + ' · level ' + run.level : MODE_NAMES[run.mode];
     $('fin-score').hidden = climb;
     $('fin-stars').hidden = !climb;
     $('fin-marks').hidden = climb;
@@ -638,7 +678,7 @@
     // only one loud button: Next level when there is one
     $('fin-again').classList.toggle('btn--primary', !climb);
     $('fin-again').classList.toggle('btn--ghost', climb);
-    $('fin-next').hidden = !(climb && run.level < LEVELS.length);
+    $('fin-next').hidden = !(climb && run.level < trackLength(run.track));
     $('fin-levels').hidden = !climb;
     const stars = climb ? starsFor(run.falls) : 0;
     Sound[(climb ? stars === 3 : right === total) ? 'win' : 'tap']();
@@ -810,7 +850,7 @@
 
     const rows = [
       ['Coins', saved.coins],
-      ['Levels', levelsClimbed() + '/' + LEVELS.length],
+      ['Levels', levelsClimbed() + '/' + totalLevels()],
       ['Daily streak', Daily.streak(saved.daily)],
     ];
     $('tally').replaceChildren(...rows.map(([label, value]) => {
@@ -882,8 +922,8 @@
   $('daily-share').addEventListener('click', () => share('daily'));
   $('quick-play').addEventListener('click', () => startQuick());
   $('fin-share').addEventListener('click', () => share(run.mode));
-  $('fin-again').addEventListener('click', () => (run.mode === 'climb' ? startClimb(run.level) : startQuick()));
-  $('fin-next').addEventListener('click', () => startClimb(run.level + 1));
+  $('fin-again').addEventListener('click', () => (run.mode === 'climb' ? startClimb(run.track, run.level) : startQuick()));
+  $('fin-next').addEventListener('click', () => startClimb(run.track, run.level + 1));
   $('fin-levels').addEventListener('click', () => goTo('levels'));
   $('fin-home').addEventListener('click', () => goTo('home'));
   els.fifty.addEventListener('click', useFifty);

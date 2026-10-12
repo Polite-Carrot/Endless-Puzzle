@@ -11,8 +11,9 @@ window.Store = (function () {
 
   const DEFAULTS = {
     coins: 100,
-    levels: {},              // Climb level number -> stars earned (1–3)
-    climb: null,             // the climb in progress: { level, rung, shown, falls, fiftyUses, earned }
+    levels: {},              // Climb 'track-level' (e.g. 'normal-4') -> stars earned (1–3)
+    track: 'easy',           // the Climb tab last looked at
+    climb: null,             // the climb in progress: { track, level, rung, shown, falls, fiftyUses, earned }
     daily: {},               // 'YYYY-MM-DD' -> { ids, marks: '1101', coins }
     quickBest: {},           // 'hard-10-all' -> best number right
     quickPrefs: { count: 10, difficulty: 'mixed', cats: null },   // cats null = all
@@ -44,8 +45,10 @@ window.Store = (function () {
         Object.assign(data, saved);
         data.settings = Object.assign(fresh().settings, saved.settings);
         data.quickPrefs = Object.assign(fresh().quickPrefs, saved.quickPrefs);
-        // a climb saved before levels existed can't be resumed
-        if (data.climb && !data.climb.level) data.climb = null;
+        // A climb or stars saved before the Climb had tracks belong to levels
+        // that no longer exist, so they can't be carried over.
+        if (data.climb && !data.climb.track) data.climb = null;
+        Object.keys(data.levels).forEach((k) => { if (!k.includes('-')) delete data.levels[k]; });
       }
     } catch (e) { /* unreadable: start fresh rather than crash */ }
     return data;

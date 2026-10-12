@@ -1083,6 +1083,42 @@ body {
 }
 .seed input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
+/* ───────── climb levels: difficulty tabs ───────── */
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin: 0 0 16px;
+}
+.tabs button {
+  appearance: none;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 7px 4px 6px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  font: inherit;
+  line-height: 1.1;
+  cursor: pointer;
+  box-shadow: 0 var(--lift) 0 var(--ink);
+  transition: transform .09s ease, box-shadow .09s ease, background .14s ease;
+}
+.tabs button b { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 15px; white-space: nowrap; }
+.tabs button small { font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tabs button:hover { background: var(--paper-warm); }
+.tabs button[aria-selected="true"] {
+  background: var(--diff);
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(43, 33, 66, .35);
+  transform: translateY(var(--lift));
+  box-shadow: 0 0 0 var(--ink);
+}
+.tabs button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
 /* ───────── climb levels: the grid, as in the jar game ───────── */
 
 #screen-levels.is-active { overflow: hidden; }
@@ -1125,6 +1161,7 @@ body {
   box-shadow: 0 var(--lift) 0 var(--ink-faint);
 }
 .tile.is-next { background: var(--gold); }
+.tile:not(:disabled):not(.is-next):not(.is-going) .tile__no { color: var(--ink); }
 .tile.is-going { background: var(--gold); outline: 3px dashed var(--ink); outline-offset: 2px; }
 .tile__no { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 20px; line-height: 1; }
 .tile__stars { font-size: 11px; letter-spacing: 1px; line-height: 1; color: #e09a00; }
@@ -1285,6 +1322,8 @@ kbd {
 /* ───────── small phones ───────── */
 
 @media (max-width: 380px) {
+  .tabs { gap: 5px; }
+  .tabs button b { font-size: 13px; }
   .subhead__title h2 { font-size: 22px; }
   .subhead__balance { flex-basis: 70px; }
   .finish__score { font-size: 60px; }
