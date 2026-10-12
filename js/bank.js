@@ -288,22 +288,22 @@
     ['ephemeral', 'eternal', ['brief', 'fleeting', 'passing'], 'xhard'],
   ];
 
-  // [correct spelling, three misspellings, difficulty]
+  // [correct spelling, what it means, three misspellings, difficulty]
   const SPELLINGS = [
-    ['necessary', ['neccessary', 'necesary', 'neccesary'], 'normal'],
-    ['because', ['becuase', 'becouse', 'beacuse'], 'normal'],
-    ['friend', ['freind', 'frend', 'freindd'], 'normal'],
-    ['beautiful', ['beautifull', 'beatiful', 'beutiful'], 'normal'],
-    ['separate', ['seperate', 'separete', 'seperete'], 'hard'],
-    ['definitely', ['definately', 'definatly', 'defanitely'], 'hard'],
-    ['rhythm', ['rythm', 'rhythym', 'rhytm'], 'hard'],
-    ['embarrass', ['embarass', 'embarras', 'embaress'], 'hard'],
-    ['calendar', ['calender', 'calandar', 'callendar'], 'hard'],
-    ['accommodate', ['accomodate', 'acommodate', 'acomodate'], 'xhard'],
-    ['occurrence', ['occurence', 'ocurrence', 'occurrance'], 'xhard'],
-    ['conscience', ['concience', 'consciense', 'conscence'], 'xhard'],
-    ['millennium', ['millenium', 'milennium', 'milenium'], 'xhard'],
-    ['privilege', ['priviledge', 'privelege', 'privilige'], 'xhard'],
+    ['necessary', 'needed', ['neccessary', 'necesary', 'neccesary'], 'normal'],
+    ['because', 'for the reason that', ['becuase', 'becouse', 'beacuse'], 'normal'],
+    ['friend', 'someone you like and trust', ['freind', 'frend', 'freindd'], 'normal'],
+    ['beautiful', 'very pretty', ['beautifull', 'beatiful', 'beutiful'], 'normal'],
+    ['separate', 'apart, not joined', ['seperate', 'separete', 'seperete'], 'hard'],
+    ['definitely', 'for certain', ['definately', 'definatly', 'defanitely'], 'hard'],
+    ['rhythm', 'the beat in music', ['rythm', 'rhythym', 'rhytm'], 'hard'],
+    ['embarrass', 'to make someone feel awkward', ['embarass', 'embarras', 'embaress'], 'hard'],
+    ['calendar', 'a chart of the days and months', ['calender', 'calandar', 'callendar'], 'hard'],
+    ['accommodate', 'to have room for', ['accomodate', 'acommodate', 'acomodate'], 'xhard'],
+    ['occurrence', 'something that happens', ['occurence', 'ocurrence', 'occurrance'], 'xhard'],
+    ['conscience', 'your sense of right and wrong', ['concience', 'consciense', 'conscence'], 'xhard'],
+    ['millennium', 'a thousand years', ['millenium', 'milennium', 'milenium'], 'xhard'],
+    ['privilege', 'a special right or advantage', ['priviledge', 'privelege', 'privilige'], 'xhard'],
   ];
 
   // [shape, sides, difficulty] — hexagon and dodecagon are hand-written
@@ -411,8 +411,8 @@
         'The opposite of “' + word + '” is “' + opp + '”. The others mean something close to “' + word + '” or nothing like it.');
     });
 
-    SPELLINGS.forEach(([word, wrong, diff]) => {
-      add('spell-' + word, diff, 'words', 'Which of these is spelled correctly?', word, wrong,
+    SPELLINGS.forEach(([word, meaning, wrong, diff]) => {
+      add('spell-' + word, diff, 'words', 'Which is the right spelling of the word that means “' + meaning + '”?', word, wrong,
         '“' + word + '” is the right spelling — it’s one people often get wrong.');
     });
 
@@ -549,10 +549,15 @@
     } },
   };
 
+  // Questions already written by hand ("What is 6 × 7?"). A generator that
+  // lands on one rolls again, so maths never repeats a written question.
+  const HAND_TEXTS = new Set((root.QUESTIONS || []).map((q) => q.q));
+
   function generate(kind, seed) {
     const g = GENERATORS[kind];
     if (!g) return null;
-    const made = g.make(rng(hash(kind + ':' + seed)));
+    let made = g.make(rng(hash(kind + ':' + seed)));
+    for (let again = 1; HAND_TEXTS.has(made.q); again++) made = g.make(rng(hash(kind + ':' + seed + ':' + again)));
     const show = (v) => (made.text || typeof v === 'string' ? v : made.plain ? String(v) : fmt(v));
     return {
       id: 'g:' + kind + ':' + seed,
@@ -561,6 +566,7 @@
       q: made.q,
       answers: [show(made.a)].concat(made.w),
       why: made.why,
+      fact: 'g:' + kind + ':' + seed,
       generated: true,
     };
   }
@@ -573,6 +579,10 @@
 
   const HAND = root.QUESTIONS || [];
   const STATIC = HAND.concat(build());
+  // The fact a question asks. "Capital of Italy?" and "Rome is the capital of
+  // which country?" are two questions but one fact, so anything dealing a
+  // set of questions treats them as the same and never uses both together.
+  STATIC.forEach((q) => { q.fact = q.id.replace(/^capr-/, 'cap-').replace(/^elr-/, 'el-'); });
   const BY_ID = new Map(STATIC.map((q) => [q.id, q]));
 
   function get(ref) {

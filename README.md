@@ -13,7 +13,7 @@ Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Page
 
 **Every release, bump the build number in three places together:** the `?v=`
 on the links in `index.html`, `BUILD` in `js/app.js`, and `version.json`
-(currently 9).
+(currently 10).
 GitHub Pages lets browsers keep files for ten minutes — the page itself
 included — so a phone can keep running an old build. The `?v=` stops a new
 page loading an old stylesheet; `version.json` (fetched uncached on start
@@ -109,10 +109,11 @@ repeat is as far from its last appearance as the bank allows, and spreads
 categories within each level. About one slot in eight is generated maths.
 It prints a report; the current one:
 
-- 4,000 question slots (2,000 rungs × main + backup); 490 generated
-- every one of the 496 written/table questions used, ~7 times each across
-  the 100 levels
-- a written question comes back after at least 3 levels, typically 10
+- 4,000 question slots (2,000 rungs × main + backup); 464 generated
+- 385 distinct facts behind the 496 written/table questions (a capital asked
+  both ways round is one fact), each used ~9 times across the 100 levels
+- no level asks the same fact twice, even split across main and backup
+- a fact comes back after at least 3 levels, typically 8
 
 More written questions widen that gap — add to the bank, rebuild, and the
 report shows the difference.
@@ -140,6 +141,13 @@ asks both ways round). Wrong answers are written per row wherever a careless
 pick could also be right: a group of geese is a gaggle but also a flock, so
 "flock" is never offered. Reverse capital questions offer countries from the
 same part of the world, so you can't rule them out by continent.
+
+**One fact, one appearance.** "What is the capital of Italy?" and "Rome is the
+capital of which country?" are two questions but one fact; every question
+carries a `fact` key, and the level builder, the Daily and Quick Play never
+put both halves in the same game. Generated maths that lands on a question
+already written by hand rolls again, and every written question has its own
+wording.
 
 **Generators** work the answer out rather than having it written, so it
 can't be wrong. A generated question is named by a reference like

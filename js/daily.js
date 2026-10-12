@@ -58,10 +58,10 @@ window.Daily = (function () {
     const used = new Set();
     return SLOTS.map((diff) => {
       const pool = bank
-        .filter((q) => q.difficulty === diff && !used.has(q.id))
+        .filter((q) => q.difficulty === diff && !used.has(q.fact || q.id))
         .sort((a, b) => (a.id < b.id ? -1 : 1));
       const item = pool[Math.floor(rand() * pool.length)];
-      used.add(item.id);
+      used.add(item.fact || item.id);
       return item.id;
     });
   }

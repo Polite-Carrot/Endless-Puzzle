@@ -57,26 +57,29 @@ function mixFor(L) {
   return counts;
 }
 
-const lastUsed = new Map();   // id -> level it last appeared in
-const uses = new Map();       // id -> times used
+// Keyed by fact, not id: a capital asked one way round counts as used for
+// the other way round too.
+const lastUsed = new Map();   // fact -> level it last appeared in
+const uses = new Map();       // fact -> times used
 const pool = {};
 DIFFS.forEach((d) => { pool[d] = statics.filter((q) => q.difficulty === d); });
 
-function takeStatic(diff, L, inLevel, catCount, rand) {
-  const candidates = pool[diff].filter((q) => !inLevel.has(q.id));
+function takeStatic(diff, L, inLevel, texts, catCount, rand) {
+  const candidates = pool[diff].filter((q) => !inLevel.has(q.fact));
   // least recently used first; then the category this level has least of;
   // then a seeded coin toss so ties don't always fall the same way
   candidates.sort((x, y) =>
-    (lastUsed.get(x.id) || 0) - (lastUsed.get(y.id) || 0) ||
+    (lastUsed.get(x.fact) || 0) - (lastUsed.get(y.fact) || 0) ||
     (catCount[x.category] || 0) - (catCount[y.category] || 0) ||
     0);
-  const oldest = lastUsed.get(candidates[0].id) || 0;
-  const leastCat = Math.min(...candidates.filter((q) => (lastUsed.get(q.id) || 0) === oldest).map((q) => catCount[q.category] || 0));
-  const best = candidates.filter((q) => (lastUsed.get(q.id) || 0) === oldest && (catCount[q.category] || 0) === leastCat);
+  const oldest = lastUsed.get(candidates[0].fact) || 0;
+  const leastCat = Math.min(...candidates.filter((q) => (lastUsed.get(q.fact) || 0) === oldest).map((q) => catCount[q.category] || 0));
+  const best = candidates.filter((q) => (lastUsed.get(q.fact) || 0) === oldest && (catCount[q.category] || 0) === leastCat);
   const q = best[Math.floor(rand() * best.length)];
-  inLevel.add(q.id);
-  lastUsed.set(q.id, L);
-  uses.set(q.id, (uses.get(q.id) || 0) + 1);
+  inLevel.add(q.fact);
+  texts.add(q.q);
+  lastUsed.set(q.fact, L);
+  uses.set(q.fact, (uses.get(q.fact) || 0) + 1);
   catCount[q.category] = (catCount[q.category] || 0) + 1;
   return q.id;
 }
@@ -119,7 +122,7 @@ for (let L = 1; L <= LEVELS; L++) {
       catCount.maths++;
       return takeGenerated(diff, L, slot, inLevel, texts, rand);
     }
-    return takeStatic(diff, L, inLevel, catCount, rand);
+    return takeStatic(diff, L, inLevel, texts, catCount, rand);
   }));
   levels.push(rungs);
 }

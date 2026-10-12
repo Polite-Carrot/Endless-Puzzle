@@ -24,7 +24,7 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 9;
+  const BUILD = 10;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   const FIFTY_BASE = 25;
@@ -270,7 +270,8 @@
     if (times === 1) return Bank.get(backup);
     const diff = Bank.get(main).difficulty;
     const own = new Set(LEVELS[run.level - 1].flat());
-    const pool = Bank.statics.filter((q) => q.difficulty === diff && !own.has(q.id));
+    const ownFacts = new Set([...own].map((ref) => Bank.get(ref).fact));
+    const pool = Bank.statics.filter((q) => q.difficulty === diff && !ownFacts.has(q.fact));
     const rand = Bank.rng(Bank.hash(run.level + ':' + run.rung + ':' + times));
     return pool[Math.floor(rand() * pool.length)];
   }
@@ -317,7 +318,10 @@
         if (!made.some((m) => m.q === q.q)) made.push(q);
       }
     }
-    let items = shuffle(written.slice(0, count - made.length).concat(made), rand);
+    // one question per fact: never both "capital of Italy?" and "Rome is the capital of…?"
+    const facts = new Set();
+    const distinct = written.filter((q) => !facts.has(q.fact) && facts.add(q.fact));
+    let items = shuffle(distinct.slice(0, count - made.length).concat(made), rand);
     items = items.slice(0, count);
     // mixed games run easiest first, like a short climb
     if (difficulty === 'mixed') items.sort((a, b) => DIFF_ORDER.indexOf(a.difficulty) - DIFF_ORDER.indexOf(b.difficulty));
