@@ -8,6 +8,13 @@ sample questions, nothing saved between visits.
 
 Open `index.html` in a browser. No build step or server is needed.
 
+Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Pages.
+
+**When you change a CSS or JS file, bump the `?v=` number on its link in
+`index.html`.** GitHub Pages lets browsers cache files for ten minutes, so
+without it a phone can pair the new page with an old stylesheet and show
+the menu unstyled.
+
 <p>
   <img src="screenshots/home.png" width="260" alt="The home screen">
   <img src="screenshots/climb.png" width="260" alt="Rung 14 of the climb">
