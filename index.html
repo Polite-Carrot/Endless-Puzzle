@@ -7,11 +7,11 @@
 <meta name="theme-color" content="#79cbf2">
 <meta name="apple-mobile-web-app-title" content="Endless Quiz">
 <link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" href="assets/favicon-32.png?v=15" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=15">
+<link rel="icon" href="assets/favicon-32.png?v=16" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=16">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts.css?v=15">
-<link rel="stylesheet" href="styles.css?v=15">
+<link rel="stylesheet" href="fonts.css?v=16">
+<link rel="stylesheet" href="styles.css?v=16">
 </head>
 <body>
 
@@ -97,11 +97,27 @@
       <h3 class="question__text" id="q-text"></h3>
     </article>
 
-    <div class="lifelines">
-      <span class="lifelines__note" id="ladder-note"></span>
-      <button id="fifty" class="btn lifeline" type="button">
+    <p class="lifelines__note" id="ladder-note"></p>
+    <div class="lifelines" id="lifelines" role="group" aria-label="Lifelines">
+      <button class="lifeline" type="button" data-life="fifty" aria-label="50/50: remove two wrong answers">
+        <span class="lifeline__icon" aria-hidden="true">½</span>
         <span class="lifeline__name">50/50</span>
-        <span class="lifeline__cost"><i class="coin" aria-hidden="true"></i><span id="fifty-cost">25</span></span>
+        <span class="lifeline__cost"><i class="coin" aria-hidden="true"></i><span></span></span>
+      </button>
+      <button class="lifeline" type="button" data-life="audience" aria-label="Ask the audience">
+        <span class="lifeline__icon" aria-hidden="true">📊</span>
+        <span class="lifeline__name">Ask</span>
+        <span class="lifeline__cost"><i class="coin" aria-hidden="true"></i><span></span></span>
+      </button>
+      <button class="lifeline" type="button" data-life="skip" aria-label="Skip: swap for another question">
+        <span class="lifeline__icon" aria-hidden="true">⤼</span>
+        <span class="lifeline__name">Skip</span>
+        <span class="lifeline__cost"><i class="coin" aria-hidden="true"></i><span></span></span>
+      </button>
+      <button class="lifeline" type="button" data-life="retry" aria-label="Second chance: if you get it wrong, pick again">
+        <span class="lifeline__icon" aria-hidden="true">↺</span>
+        <span class="lifeline__name">2nd try</span>
+        <span class="lifeline__cost"><i class="coin" aria-hidden="true"></i><span></span></span>
       </button>
     </div>
 
@@ -254,7 +270,7 @@
         <span class="toggle__switch" aria-hidden="true"></span>
       </label>
       <label class="toggle" id="set-vibrate-row">
-        <span class="toggle__text"><b>Vibration</b><small>A buzz when you get one wrong</small></span>
+        <span class="toggle__text"><b>Haptics</b><small>A little buzz for right and wrong answers</small></span>
         <input type="checkbox" id="set-vibrate">
         <span class="toggle__switch" aria-hidden="true"></span>
       </label>
@@ -278,12 +294,33 @@
     </div>
 
     <div class="card card--single">
+      <h3 class="card__title card__title--small">Spotted a mistake?</h3>
+      <p class="card__body">If a question looks wrong, tell us and we’ll check it.</p>
+      <button id="go-report" class="btn btn--wide" type="button">Report a question</button>
+    </div>
+
+    <div class="card card--single">
       <h3 class="card__title card__title--small">Your progress</h3>
       <dl class="tally" id="tally"></dl>
       <button id="reset" class="btn btn--danger btn--wide" type="button">Reset progress</button>
     </div>
 
     <p class="version" id="version"></p>
+  </section>
+
+  <!-- ─────────────── report a question ─────────────── -->
+  <section id="screen-report" class="screen">
+    <header class="subhead">
+      <button id="report-back" class="btn btn--ghost" type="button">&larr; Back</button>
+      <div class="subhead__title">
+        <h2>Report</h2>
+        <span>Pick the question</span>
+      </div>
+      <span class="subhead__balance" aria-hidden="true"></span>
+    </header>
+    <p class="report__intro">Your last questions, newest first. Tap the one that looks wrong.</p>
+    <ol class="recent" id="recent"></ol>
+    <p class="report__empty" id="recent-empty" hidden>Answer a few questions first — they’ll show up here.</p>
   </section>
 
   <!-- ─────────────── how to play ─────────────── -->
@@ -336,6 +373,7 @@
       <article class="card guide__card">
         <div class="guide__art" aria-hidden="true">
           <span class="lifeline lifeline--mini"><b>50/50</b><span class="lifeline__cost"><i class="coin"></i>25</span></span>
+          <span class="lifeline lifeline--mini"><b>Skip</b><span class="lifeline__cost"><i class="coin"></i>30</span></span>
         </div>
         <h3 class="card__title">Coins &amp; the 50/50</h3>
         <p>Every right answer earns coins. Harder questions pay more:</p>
@@ -345,7 +383,14 @@
           <tr><td><span class="pill" style="--diff:var(--hard)">Hard</span></td><td><i class="coin"></i> 15</td></tr>
           <tr><td><span class="pill" style="--diff:var(--xhard)">Extra Hard</span></td><td><i class="coin"></i> 25</td></tr>
         </table>
-        <p>Stuck? The <b>50/50</b> removes two wrong answers. It costs 25 coins, and the price <b>doubles</b> every time you use it in the same game. A question answered with a 50/50 pays half.</p>
+        <p>Stuck? Spend coins on a <b>lifeline</b>:</p>
+        <ul class="sheet__list">
+          <li><b>50/50</b> removes two wrong answers.</li>
+          <li><b>Ask the audience</b> shows how a crowd voted. They’re usually right on easy questions — less so on hard ones.</li>
+          <li><b>Skip</b> swaps the question for another just as hard.</li>
+          <li><b>Second chance</b>: if your answer is wrong, you get to pick again instead of losing the question.</li>
+        </ul>
+        <p>Each lifeline’s price <b>doubles</b> every time you use it in the same game. A question you get right with help pays half. There are no lifelines in the Daily Quiz.</p>
       </article>
     </div>
   </section>
@@ -361,15 +406,34 @@
   </form>
 </dialog>
 
+<dialog id="report-dialog" class="sheet" aria-labelledby="report-title">
+  <h3 id="report-title" class="sheet__title">What’s wrong?</h3>
+  <p class="sheet__q" id="report-q"></p>
+  <form method="dialog" id="report-form">
+    <div class="reasons">
+      <label><input type="radio" name="reason" value="The marked answer is wrong" checked><span>The marked answer is wrong</span></label>
+      <label><input type="radio" name="reason" value="Another answer is also right"><span>Another answer is also right</span></label>
+      <label><input type="radio" name="reason" value="There’s a typo or it’s unclear"><span>There’s a typo or it’s unclear</span></label>
+      <label><input type="radio" name="reason" value="Something else"><span>Something else</span></label>
+    </div>
+    <textarea id="report-note" rows="3" maxlength="500" placeholder="Anything else to add? (optional)"></textarea>
+    <div class="sheet__actions">
+      <button value="cancel" class="btn btn--ghost">Cancel</button>
+      <button value="send" class="btn btn--primary">Send report</button>
+    </div>
+  </form>
+</dialog>
+
 <p id="toast" class="toast" role="status" hidden></p>
 
-<script src="js/questions.js?v=15"></script>
-<script src="js/bank.js?v=15"></script>
-<script src="js/levels.js?v=15"></script>
-<script src="js/store.js?v=15"></script>
-<script src="js/sound.js?v=15"></script>
-<script src="js/daily.js?v=15"></script>
-<script src="js/reminders.js?v=15"></script>
-<script src="js/app.js?v=15"></script>
+<script src="js/questions.js?v=16"></script>
+<script src="js/bank.js?v=16"></script>
+<script src="js/levels.js?v=16"></script>
+<script src="js/store.js?v=16"></script>
+<script src="js/sound.js?v=16"></script>
+<script src="js/native.js?v=16"></script>
+<script src="js/daily.js?v=16"></script>
+<script src="js/reminders.js?v=16"></script>
+<script src="js/app.js?v=16"></script>
 </body>
 </html>

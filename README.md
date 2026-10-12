@@ -14,7 +14,7 @@ Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Page
 
 **Every release, bump the build number in three places together:** the `?v=`
 on the links in `index.html`, `BUILD` in `js/app.js`, and `version.json`
-(currently 15).
+(currently 16).
 GitHub Pages lets browsers keep files for ten minutes — the page itself
 included — so a phone can keep running an old build. The `?v=` stops a new
 page loading an old stylesheet; `version.json` (fetched uncached on start
@@ -133,12 +133,29 @@ report, now:
 - 656 distinct written/table facts used, ~5 times each across all tracks
 - within a track, a fact comes back after at least 4 levels (typically 5–9)
 
-## Coins and the 50/50
+## Coins and lifelines
 
-- Correct answers pay coins: Easy 5, Normal 10, Hard 15, Extra Hard 25.
-- The **50/50** removes two wrong answers and costs coins. Its price
-  **doubles each time it is used in a game** (25, 50, 100…). It can be used
-  once per question, and a question answered with it pays half.
+Correct answers pay coins: Easy 5, Normal 10, Hard 15, Extra Hard 25. Coins
+buy four **lifelines**, in a row under each question:
+
+| Lifeline | Starts at | What it does |
+|----------|----------:|--------------|
+| **50/50** | 25 | Removes two wrong answers. |
+| **Ask the audience** | 20 | Shows how a crowd voted, as a bar on each answer. The crowd's favourite is right every time on Easy, 90% on Normal, 75% on Hard and 60% on Extra Hard — seeded by the question, so asking twice gets the same vote. |
+| **Skip** | 30 | Swaps the question for another of the same difficulty that hasn't come up in this game (and, in Quick Play, from the chosen categories). |
+| **Second chance** | 40 | Bought before answering. If your answer is wrong it's struck out and you pick again — no fall in the Climb, no red mark in Quick Play. |
+
+- Each lifeline's price **doubles every time it's used in a game** (so 25,
+  50, 100… for the 50/50), and each can be used once per question.
+- Skip is one thing at a time: it can't be used after another lifeline on
+  the same question, and the others reset for the new question.
+- A question got right **with help pays half**. A skipped-to question pays
+  in full.
+- **No lifelines in the Daily Quiz**, so everyone's daily score means the same.
+- Lifeline prices are part of a saved climb, so leaving and coming back
+  doesn't reset them.
+
+Keys: `H` 50/50 · `P` ask the audience (poll) · `K` skip · `R` second chance.
 
 ## The question bank
 
@@ -195,11 +212,23 @@ difficulties + Mixed) and confirming 20 different questions each time.
 
 ## Settings
 
-Sound effects, vibration (only offered where the browser can vibrate —
-iPhone and iPad browsers can't), explanations after each answer, and a
-daily reminder (see below). Also
-shows your coins, Climb levels and daily streak, with a **Reset progress**
-button behind a confirmation.
+Sound effects; **haptics** — a real buzz for right and wrong answers through
+Capacitor's Haptics plugin in the app (which, unlike the web's vibrate,
+works on iPhone), or the browser's vibrate where there is one; explanations
+after each answer; and a daily reminder (see below). Also shows your coins,
+Climb levels and daily streak, with a **Reset progress** button behind a
+confirmation.
+
+### Report a question
+
+Settings → **Report a question** lists the last 30 questions you answered,
+newest first. Tap one, pick what's wrong — the marked answer is wrong,
+another answer is also right, a typo, or something else — add a note if you
+like, and **Send report**. The report includes the question's reference
+(`history-0101`, `g:times12:48213`…) and the build, so it can be found and
+fixed. It goes out through the phone's share sheet (Capacitor's Share
+plugin; the browser's share, or the clipboard, elsewhere). Set
+`REPORT_EMAIL` in `js/app.js` and it opens an email to that address instead.
 
 ## Daily reminders
 
@@ -249,10 +278,19 @@ splash, and a white notification icon for Android's status bar.
 ## Keeping progress
 
 Coins, the climb in progress, stars per level, daily results, Quick Play
-bests and settings live in the browser's own storage (`js/store.js`). Storage is
-tested with a write-and-read-back before it is trusted; if the browser
-refuses it (a private window, say) the game keeps playing from memory and
-the home screen says plainly that progress won't be saved.
+bests, recent questions and settings — all in one save (`js/store.js`).
+
+**In the app there are two copies.** The working copy is in the web view's
+localStorage, which the game reads instantly at start-up. But iOS treats web
+storage inside an app as a cache it may clear when the phone runs short of
+space. So every save is also written to Capacitor's **Preferences** — the
+phone's own UserDefaults / SharedPreferences, which the system leaves alone.
+At start-up the two are compared by their save time, and if the phone's copy
+is newer or the web copy has gone, it's put back before anything else runs.
+
+**In a browser** there's only localStorage, tested with a write-and-read-back
+before it's trusted; if it's refused (a private window, say) the game plays
+on from memory and the home screen says progress won't be saved.
 
 ## Sound
 
@@ -280,6 +318,7 @@ js/bank.js        fact tables, generators, and the assembled bank  (no DOM)
 js/levels.js      generated — the Climb's levels per track, as question references
 js/store.js       saving progress, and whether it can be trusted
 js/sound.js       oscillator blips
+js/native.js      the phone, when there is one: haptics, share, Preferences
 js/daily.js       the daily seed, streak and week   (no DOM)
 js/reminders.js   daily reminder notifications (native app only)
 js/app.js         screens and the shared question screen for all three modes

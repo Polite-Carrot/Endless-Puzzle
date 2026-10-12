@@ -17,18 +17,31 @@
  * deal comes from a seed, so the same seed and settings deal the same quiz
  * — answers in the same places — for anyone.
  *
- * Coins are earned by answering and spent on the 50/50. Its price doubles
- * each time it is used in a game, it can be used once per question, and a
- * question answered with it pays half — so it is a rescue, not a habit. */
+ * Coins are earned by answering and spent on lifelines — 50/50, Ask the
+ * audience, Skip and Second chance. Each one's price doubles every time it is
+ * used in a game, each can be used once per question, and a question got
+ * right with help pays half — so they're a rescue, not a habit. No lifelines
+ * in the Daily Quiz, so everyone's score there means the same thing. */
 (function () {
   'use strict';
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 15;
+  const BUILD = 16;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
-  const FIFTY_BASE = 25;
+  // Lifelines: starting price, and what each costs after n uses this game
+  const LIFELINES = {
+    fifty: { name: '50/50', base: 25 },
+    audience: { name: 'Ask the audience', base: 20 },
+    skip: { name: 'Skip', base: 30 },
+    retry: { name: 'Second chance', base: 40 },
+  };
+  const LIFE_KEYS = Object.keys(LIFELINES);
+  const noUses = () => ({ fifty: 0, audience: 0, skip: 0, retry: 0 });
+  // How often the audience's favourite is the right answer, by difficulty
+  const AUDIENCE_RIGHT = { easy: 1, normal: 0.9, hard: 0.75, xhard: 0.6 };
+  const RECENT_MAX = 30;
   const KEYS = ['A', 'B', 'C', 'D'];
   const KEY_COLOURS = ['var(--a)', 'var(--b)', 'var(--c)', 'var(--d)'];
   const DIFF_COLOURS = { easy: 'var(--easy)', normal: 'var(--normal)', hard: 'var(--hard)', xhard: 'var(--xhard)' };
@@ -52,7 +65,7 @@
     title: $('q-title'), sub: $('q-sub'),
     coins: $('stat-coins'), two: $('stat-two'), twoLabel: $('stat-two-label'),
     ladder: $('ladder'), progress: $('progress'), note: $('ladder-note'),
-    fifty: $('fifty'), fiftyCost: $('fifty-cost'),
+    lifelines: $('lifelines'),
     cat: $('q-cat'), catIcon: $('q-cat-icon'), catName: $('q-cat-name'),
     diff: $('q-diff'), text: $('q-text'), answers: $('answers'),
     result: $('result'), mark: $('result-mark'), resultTitle: $('result-title'),
@@ -76,8 +89,10 @@
     shown: {},           // climb: rung -> times it has been asked this climb
     falls: 0,
     streak: 0,           // climb: right answers in a row
-    fiftyUses: 0,        // this game; sets the price
-    usedFifty: false,    // this question
+    uses: noUses(),      // lifelines used this game; sets their prices
+    now: {},             // lifelines used on this question: { fifty: true, … }
+    retryArmed: false,   // Second chance bought, waiting for a wrong answer
+    helped: false,       // this question was helped (pays half if right)
     answered: false,
     finished: false,
     item: null,
@@ -110,8 +125,8 @@
     el.classList.add(cls);
   }
 
-  function buzz(ms) {
-    if (saved.settings.vibrate && navigator.vibrate) navigator.vibrate(ms);
+  function buzz(kind) {
+    if (saved.settings.vibrate) Native.haptic(kind);
   }
 
   let toastTimer = 0;
@@ -128,7 +143,7 @@
     return safe;
   }
 
-  function fiftyPrice() { return FIFTY_BASE * Math.pow(2, run.fiftyUses); }
+  const price = (k) => LIFELINES[k].base * Math.pow(2, run.uses[k] || 0);
 
   // The Climb has four tracks, each its own run of levels (js/levels.js).
   // Stars are saved per track and level, as 'normal-4'.
@@ -166,6 +181,7 @@
     if (name === 'quick') drawQuick();
     if (name === 'settings') drawSettings();
     if (name === 'howto') drawGuide();
+    if (name === 'report') drawReport();
   }
 
   /* ───────── home ───────── */
@@ -270,8 +286,8 @@
 
   function resetRun(mode) {
     Object.assign(run, {
-      mode, queue: [], index: 0, marks: [], earned: 0, fiftyUses: 0,
-      usedFifty: false, answered: false, finished: false, item: null,
+      mode, queue: [], index: 0, marks: [], earned: 0, uses: noUses(),
+      now: {}, retryArmed: false, helped: false, answered: false, finished: false, item: null,
     });
   }
 
@@ -285,7 +301,8 @@
         return;
       }
       resetRun('climb');
-      Object.assign(run, { track, level, rung: c.rung, shown: c.shown || {}, falls: c.falls || 0, fiftyUses: c.fiftyUses || 0, earned: c.earned || 0, streak: 0 });
+      Object.assign(run, { track, level, rung: c.rung, shown: c.shown || {}, falls: c.falls || 0,
+        uses: Object.assign(noUses(), c.uses || { fifty: c.fiftyUses || 0 }), earned: c.earned || 0, streak: 0 });
     } else {
       resetRun('climb');
       Object.assign(run, { track, level, rung: 1, shown: {}, falls: 0, streak: 0 });
@@ -296,7 +313,7 @@
   }
 
   function saveClimb() {
-    saved.climb = { track: run.track, level: run.level, rung: run.rung, shown: run.shown, falls: run.falls, fiftyUses: run.fiftyUses, earned: run.earned };
+    saved.climb = { track: run.track, level: run.level, rung: run.rung, shown: run.shown, falls: run.falls, uses: run.uses, earned: run.earned };
     persist();
   }
 
@@ -421,16 +438,26 @@
       els.twoLabel.textContent = 'right';
       els.two.textContent = run.marks.filter(Boolean).length;
     }
-    const price = fiftyPrice();
-    els.fiftyCost.textContent = price;
-    els.fifty.hidden = run.mode === 'daily';
-    els.fifty.disabled = run.answered || run.usedFifty || saved.coins < price;
-    els.fifty.classList.toggle('is-used', run.usedFifty);
-    els.fifty.querySelector('.lifeline__name').textContent = run.usedFifty ? '50/50 used' : '50/50';
+    drawLifelines();
+  }
+
+  function drawLifelines() {
+    els.lifelines.hidden = run.mode === 'daily';
+    els.lifelines.querySelectorAll('[data-life]').forEach((b) => {
+      const k = b.dataset.life;
+      const used = !!run.now[k];
+      b.querySelector('.lifeline__cost span').textContent = price(k);
+      b.classList.toggle('is-used', used);
+      b.classList.toggle('is-armed', k === 'retry' && run.retryArmed);
+      // Skip makes no sense once a lifeline has already been spent on this
+      // question, and the others none after Skip — keep it one thing at a time.
+      b.disabled = run.answered || used || saved.coins < price(k) ||
+        (k === 'skip' && (run.now.fifty || run.now.audience || run.retryArmed));
+    });
   }
 
   function noteFor() {
-    if (run.mode === 'daily') return 'No 50/50 in the daily — just you!';
+    if (run.mode === 'daily') return 'No lifelines in the daily — just you!';
     if (run.mode === 'quick') {
       const left = run.queue.length - run.index;
       return left === 1 ? 'Last question!' : left + ' questions to go';
@@ -456,17 +483,25 @@
       els.title.textContent = (run.index + 1) + ' of ' + run.queue.length;
       els.sub.textContent = MODE_NAMES[run.mode];
     }
-    const cat = CATEGORIES[item.category];
-
-    run.item = item;
-    run.order = order;
-    run.answered = false;
-    run.usedFifty = false;
-
     els.ladder.hidden = run.mode !== 'climb';
     els.progress.hidden = run.mode === 'climb';
     if (run.mode === 'climb') drawLadder(); else drawProgress();
     els.note.textContent = noteFor();
+    render(item, order);
+    els.result.hidden = true;
+    els.result.classList.remove('is-right', 'is-wrong');
+    document.querySelector('.app').scrollTo({ top: 0 });
+  }
+
+  // Put a question on screen with its answers in the given order.
+  function render(item, order) {
+    const cat = CATEGORIES[item.category];
+    run.item = item;
+    run.order = order;
+    run.answered = false;
+    run.now = {};
+    run.retryArmed = false;
+    run.helped = false;
     drawStats();
 
     els.cat.style.setProperty('--cat', cat.colour);
@@ -490,48 +525,141 @@
       li.appendChild(btn);
       return li;
     }));
-
-    els.result.hidden = true;
-    els.result.classList.remove('is-right', 'is-wrong');
-    document.querySelector('.app').scrollTo({ top: 0 });
   }
 
-  function useFifty() {
-    const price = fiftyPrice();
-    if (run.mode === 'daily' || run.answered || run.usedFifty || saved.coins < price) return;
-    saved.coins -= price;
-    run.fiftyUses += 1;
-    run.usedFifty = true;
+  /* ───────── lifelines ───────── */
+
+  function useLifeline(k) {
+    const cost = price(k);
+    if (run.mode === 'daily' || run.answered || run.now[k] || saved.coins < cost) return;
+    if (k === 'skip' && (run.now.fifty || run.now.audience || run.retryArmed)) return;
+    if (k === 'skip' && !skipTo()) { toast('No other question to swap in'); return; }
+    saved.coins -= cost;
+    run.uses[k] += 1;
     if (run.mode === 'climb') saveClimb(); else persist();
-
-    const correct = run.item.answers[0];
-    const wrong = shuffle([...els.answers.querySelectorAll('.answer')]
-      .filter((b) => b.dataset.answer !== correct)).slice(0, 2);
-    wrong.forEach((b) => { b.disabled = true; b.classList.add('is-gone'); });
-
-    Sound.fifty();
-    drawStats();
     replay(els.coins.closest('.stat'), 'is-spend');
+    buzz('tap');
+
+    if (k === 'skip') {
+      const swap = skipTo();
+      const order = shuffle(swap.answers);
+      if (run.mode !== 'climb') run.queue[run.index] = { item: swap, order };
+      Sound.fifty();
+      render(swap, order);
+      run.now.skip = true;     // one skip per question
+      drawStats();
+      toast('Skipped — here’s another');
+      return;
+    }
+
+    run.now[k] = true;
+    if (k === 'fifty') fiftyFifty();
+    if (k === 'audience') askAudience();
+    if (k === 'retry') { run.retryArmed = true; toast('Second chance ready — if you’re wrong, you can pick again'); }
+    if (k !== 'retry') run.helped = true;
+    Sound.fifty();
+    drawStats();   // the coin count and every lifeline's state
+  }
+
+  function fiftyFifty() {
+    const correct = run.item.answers[0];
+    const wrong = shuffle([...els.answers.querySelectorAll('.answer:not(.is-gone):not(.is-wrong)')]
+      .filter((b) => b.dataset.answer !== correct)).slice(0, 2);
+    wrong.forEach((b) => { b.disabled = true; b.classList.add('is-gone'); b.querySelector('.answer__poll')?.remove(); });
+  }
+
+  // A pretend studio audience. Seeded by the question, so asking twice about
+  // the same question gets the same vote. How often the crowd's favourite is
+  // right depends on difficulty: always on Easy, about 60% on Extra Hard.
+  function askAudience() {
+    const correct = run.item.answers[0];
+    const buttons = [...els.answers.querySelectorAll('.answer:not(.is-gone):not(.is-wrong)')];
+    const rand = Bank.rng(Bank.hash('audience:' + run.item.id));
+    const rightLeads = rand() < AUDIENCE_RIGHT[run.item.difficulty];
+    const wrongs = buttons.filter((b) => b.dataset.answer !== correct);
+    const favourite = rightLeads || !wrongs.length ? correct : wrongs[Math.floor(rand() * wrongs.length)].dataset.answer;
+    // the favourite gets the biggest share; the rest split what's left
+    const top = { easy: [55, 80], normal: [45, 65], hard: [36, 52], xhard: [32, 45] }[run.item.difficulty];
+    const lead = buttons.length === 1 ? 100 : Math.round(top[0] + rand() * (top[1] - top[0]));
+    const others = buttons.filter((b) => b.dataset.answer !== favourite);
+    const weights = others.map(() => 0.4 + rand());
+    const sum = weights.reduce((a, b) => a + b, 0);
+    const shares = new Map([[favourite, lead]]);
+    let left = 100 - lead;
+    others.forEach((b, i) => {
+      // never let a runner-up match the favourite
+      const v = i === others.length - 1 ? left : Math.min(lead - 1, Math.round((100 - lead) * weights[i] / sum));
+      shares.set(b.dataset.answer, v);
+      left -= v;
+    });
+    buttons.forEach((b) => {
+      const pct = shares.get(b.dataset.answer) || 0;
+      const bar = document.createElement('span');
+      bar.className = 'answer__poll';
+      bar.style.setProperty('--pct', pct + '%');
+      bar.innerHTML = '<i></i><b></b>';
+      bar.querySelector('b').textContent = pct + '%';
+      b.appendChild(bar);
+    });
+  }
+
+  // Another question of the same difficulty that hasn't been asked in this
+  // game — for the Climb, nothing from this level; for Quick Play, nothing
+  // already in the deal and from the same categories.
+  function skipTo() {
+    const diff = run.item.difficulty;
+    const avoid = new Set([run.item.fact]);
+    let pool;
+    if (run.mode === 'climb') {
+      LEVELS[run.track][run.level - 1].flat().forEach((ref) => avoid.add(Bank.get(ref).fact));
+      pool = Bank.statics.filter((q) => q.difficulty === diff && !avoid.has(q.fact));
+    } else {
+      run.queue.forEach((x) => avoid.add(x.item.fact));
+      pool = Bank.statics.filter((q) => q.difficulty === diff && run.quick.cats.includes(q.category) && !avoid.has(q.fact));
+      if (!pool.length && run.quick.cats.includes('maths')) {
+        const kinds = Bank.generatorsFor(diff);
+        return Bank.generate(kinds[(run.uses.skip + run.index) % kinds.length], Math.floor(Math.random() * 1e9));
+      }
+    }
+    if (!pool.length) return null;
+    const rand = Bank.rng(Bank.hash('skip:' + run.item.id + ':' + run.uses.skip));
+    return pool[Math.floor(rand() * pool.length)];
   }
 
   function choose(btn) {
     if (run.answered) return;
-    run.answered = true;
-
     const item = run.item;
     const correct = item.answers[0];
     const right = btn.dataset.answer === correct;
+
+    // Second chance: a wrong answer is struck out and you pick again.
+    if (!right && run.retryArmed) {
+      run.retryArmed = false;
+      run.helped = true;
+      btn.disabled = true;
+      btn.classList.add('is-wrong', 'is-struck');
+      btn.querySelector('.answer__poll')?.remove();
+      Sound.wrong();
+      buzz('wrong');
+      toast('Not that one — pick again');
+      drawLifelines();
+      return;
+    }
+
+    run.answered = true;
+    run.retryArmed = false;
+    remember(item);
     els.answers.querySelectorAll('.answer').forEach((b) => {
       b.disabled = true;
       if (b.dataset.answer === correct) b.classList.add('is-right');
       else if (b === btn) b.classList.add('is-wrong');
-      else if (!b.classList.contains('is-gone')) b.classList.add('is-dim');
+      else if (!b.classList.contains('is-gone') && !b.classList.contains('is-struck')) b.classList.add('is-dim');
     });
 
     let earned = 0;
     if (right) {
       const full = DIFFICULTIES[item.difficulty].coins;
-      earned = run.usedFifty ? Math.ceil(full / 2) : full;
+      earned = run.helped ? Math.ceil(full / 2) : full;
       saved.coins += earned;
       run.earned += earned;
       replay(els.coins.closest('.stat'), 'is-bump');
@@ -585,7 +713,7 @@
     }
 
     Sound[sound]();
-    if (!right) buzz(120);
+    buzz(right ? 'right' : 'wrong');
     if (!right) replay(els.two.closest('.stat'), 'is-bump');
     drawStats();
 
@@ -612,6 +740,70 @@
     if (run.index >= run.queue.length) finish();
     else show();
   }
+
+  /* ───────── report a question ───────── */
+
+  // Remember what was asked, so a mistake can be reported later from Settings.
+  function remember(item) {
+    saved.recent = [{ id: item.id, mode: run.mode, at: Date.now() }]
+      .concat((saved.recent || []).filter((r) => r.id !== item.id))
+      .slice(0, RECENT_MAX);
+  }
+
+  // Leave empty to use the share sheet / clipboard. Set an address and
+  // reports open an email to it instead.
+  const REPORT_EMAIL = '';
+  let reporting = null;
+
+  function drawReport() {
+    const recent = (saved.recent || []).map((r) => Object.assign({ item: Bank.get(r.id) }, r)).filter((r) => r.item);
+    $('recent-empty').hidden = recent.length > 0;
+    $('recent').replaceChildren(...recent.map((r) => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'recent__item';
+      b.innerHTML = '<span class="recent__q"></span><span class="recent__a"></span>';
+      b.children[0].textContent = r.item.q;
+      b.children[1].textContent = 'Answer: ' + r.item.answers[0] + ' · ' + MODE_NAMES[r.mode];
+      b.addEventListener('click', () => openReport(r.item));
+      li.appendChild(b);
+      return li;
+    }));
+  }
+
+  function openReport(item) {
+    reporting = item;
+    $('report-q').textContent = '“' + item.q + '” — marked answer: ' + item.answers[0];
+    $('report-note').value = '';
+    $('report-form').reset();
+    $('report-dialog').showModal();
+  }
+
+  $('report-dialog').addEventListener('close', async () => {
+    if ($('report-dialog').returnValue !== 'send' || !reporting) return;
+    const reason = (new FormData($('report-form')).get('reason')) || 'Something else';
+    const note = $('report-note').value.trim();
+    const q = reporting;
+    const text = [
+      'Endless Quiz — question report',
+      'Question: ' + q.q,
+      'Marked answer: ' + q.answers[0],
+      'Other answers: ' + q.answers.slice(1).join(' / '),
+      'Problem: ' + reason,
+      note ? 'Note: ' + note : '',
+      'Ref: ' + q.id + ' · build ' + BUILD,
+    ].filter(Boolean).join('\n');
+    reporting = null;
+    if (REPORT_EMAIL) {
+      location.href = 'mailto:' + REPORT_EMAIL + '?subject=' + encodeURIComponent('Question report: ' + q.id) + '&body=' + encodeURIComponent(text);
+      return;
+    }
+    const how = await Native.share(text);
+    if (how === 'copied') toast('Report copied — paste it into an email to us');
+    else if (how === 'shared') toast('Thanks — we’ll check it');
+    else if (how === 'failed') toast('Couldn’t send from here');
+  });
 
   /* ───────── results ───────── */
 
@@ -847,8 +1039,8 @@
     $('set-sound').checked = saved.settings.sound;
     $('set-vibrate').checked = saved.settings.vibrate;
     $('set-explain').checked = saved.settings.explain;
-    // iPhone and iPad browsers cannot vibrate, so don't offer it there
-    $('set-vibrate-row').hidden = !navigator.vibrate;
+    // a browser on iPhone or iPad can't buzz; the app can
+    $('set-vibrate-row').hidden = !Native.canHaptic();
     drawReminder();
 
     const rows = [
@@ -875,7 +1067,7 @@
       persist();
       applySettings();
       if (key === 'sound' && e.target.checked) Sound.tap();
-      if (key === 'vibrate' && e.target.checked) buzz(40);
+      if (key === 'vibrate' && e.target.checked) buzz('right');
     });
   });
 
@@ -979,19 +1171,22 @@
   $('fin-next').addEventListener('click', () => startClimb(run.track, run.level + 1));
   $('fin-levels').addEventListener('click', () => goTo('levels'));
   $('fin-home').addEventListener('click', () => goTo('home'));
-  els.fifty.addEventListener('click', useFifty);
+  els.lifelines.querySelectorAll('[data-life]').forEach((b) => b.addEventListener('click', () => useLifeline(b.dataset.life)));
+  $('go-report').addEventListener('click', () => goTo('report'));
+  $('report-back').addEventListener('click', () => goTo('settings'));
   els.next.addEventListener('click', next);
 
-  // Keyboard: 1–4 or A–D to answer, H for the 50/50, Enter / Space for next.
+  // Keyboard: 1–4 or A–D to answer, Enter / Space for next. Lifelines:
+  // H 50/50, P ask the audience (poll), K skip, R second chance.
   document.addEventListener('keydown', (e) => {
-    if (!$('screen-quiz').classList.contains('is-active') || els.confirm.open) return;
+    if (!$('screen-quiz').classList.contains('is-active') || els.confirm.open || $('report-dialog').open) return;
     const k = e.key.toUpperCase();
     const pick = '1234'.indexOf(k) >= 0 ? '1234'.indexOf(k) : KEYS.indexOf(k);
     if (!run.answered && pick >= 0) {
       const btn = els.answers.querySelectorAll('.answer')[pick];
       if (btn && !btn.disabled) btn.click();
-    } else if (!run.answered && k === 'H') {
-      useFifty();
+    } else if (!run.answered && 'HPKR'.includes(k) && k.length === 1) {
+      useLifeline({ H: 'fifty', P: 'audience', K: 'skip', R: 'retry' }[k]);
     } else if (run.answered && (e.key === 'Enter' || e.key === ' ') && document.activeElement !== els.next) {
       e.preventDefault();
       els.next.click();
@@ -1042,5 +1237,10 @@
   applySettings();
   drawHome();
   checkForUpdate();
-  syncReminders();
+  // In the app, the phone keeps its own copy of progress. If the web copy was
+  // cleared or is older, swap the phone's in before anything else happens.
+  Store.restore().then((changed) => {
+    if (changed) { saved = Store.load(); applySettings(); drawHome(); }
+    syncReminders();
+  });
 })();

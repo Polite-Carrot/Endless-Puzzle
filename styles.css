@@ -342,6 +342,58 @@ body {
 
 .menu-foot { display: flex; justify-content: center; gap: 11px; margin-top: 26px; padding-bottom: 6px; }
 
+/* ───────── report a question ───────── */
+
+.report__intro, .report__empty { margin: 0 2px 14px; color: var(--ink-soft); font-size: 14.5px; }
+.report__empty[hidden] { display: none; }
+.recent { list-style: none; margin: 0; padding: 0 0 12px; display: grid; gap: 10px; }
+.recent__item {
+  appearance: none;
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  padding: 11px 14px;
+  text-align: left;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 13px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 var(--lift) 0 var(--ink);
+}
+.recent__item:active { transform: translateY(var(--lift)); box-shadow: 0 0 0 var(--ink); }
+.recent__q { font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 16.5px; line-height: 1.2; }
+.recent__a { color: var(--ink-soft); font-size: 13px; }
+.sheet__q { margin: 0 0 12px; color: var(--ink-soft); font-size: 14.5px; line-height: 1.4; }
+.reasons { display: grid; gap: 6px; margin-bottom: 12px; }
+.reasons label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 2px solid var(--ink-faint);
+  border-radius: 11px;
+  font-weight: 700;
+  font-size: 14.5px;
+  cursor: pointer;
+}
+.reasons label:has(input:checked) { border-color: var(--ink); background: var(--paper-warm); }
+.reasons input { accent-color: var(--accent); width: 18px; height: 18px; margin: 0; }
+#report-note {
+  width: 100%;
+  margin-bottom: 14px;
+  padding: 9px 11px;
+  border: 2px solid var(--ink);
+  border-radius: 11px;
+  font: inherit;
+  font-size: 15px;
+  resize: vertical;
+}
+.card__body { margin: 0 0 12px; color: var(--ink-soft); font-size: 14.5px; }
+.sheet__list { margin: 0 0 8px; padding-left: 20px; font-size: 15px; line-height: 1.45; }
+.sheet__list li + li { margin-top: 5px; }
+
 /* ───────── how to play ───────── */
 
 .sheet {
@@ -494,44 +546,97 @@ body {
 .stat--coins.is-spend { animation: spend .4s ease; }
 @keyframes spend { 30% { transform: translateY(3px); background: #ffd9d9; } }
 
-/* ───────── lifelines ───────── */
+/* ───────── lifelines ─────────
+   Four across, each a little chunky button with its price underneath.
+   A used one goes flat and faint; Second chance glows while it's armed. */
 
-.lifelines {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-}
 .lifelines__note {
+  margin: 14px 2px 0;
   color: var(--ink);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.25;
 }
-.lifeline {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 7px 8px 7px 14px;
-  background: var(--paper);
-  flex: 0 0 auto;
+.lifelines {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
 }
-.lifeline__name { font-size: 18px; font-weight: 800; }
+.lifelines[hidden] { display: none; }
+.lifeline {
+  appearance: none;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 6px 4px 7px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 13px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.05;
+  cursor: pointer;
+  box-shadow: 0 var(--lift) 0 var(--ink);
+  transition: transform .09s ease, box-shadow .09s ease, background .14s ease, opacity .2s ease;
+}
+.lifeline:hover:not(:disabled) { background: var(--paper-warm); }
+.lifeline:active:not(:disabled) { transform: translateY(var(--lift)); box-shadow: 0 0 0 var(--ink); }
+.lifeline:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.lifeline:disabled { cursor: default; opacity: .45; box-shadow: 0 var(--lift) 0 var(--ink-faint); }
+.lifeline__icon { font-size: 17px; font-weight: 800; height: 20px; line-height: 20px; }
+.lifeline__name { font-family: "Baloo 2", sans-serif; font-size: 14px; font-weight: 800; white-space: nowrap; }
 .lifeline__cost {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border: 2px solid var(--ink);
-  border-radius: 99px;
-  background: var(--paper-warm);
-  font-size: 14px;
+  gap: 3px;
+  margin-top: 2px;
+  font-size: 12px;
+  font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-.lifeline[hidden] { display: none; }
-.lifeline.is-used .lifeline__cost { display: none; }
-.lifeline.is-used { padding-right: 14px; }
+.lifeline__cost .coin { width: 12px; height: 12px; }
+.lifeline.is-used { opacity: .45; transform: translateY(var(--lift)); box-shadow: 0 0 0 var(--ink); }
+.lifeline.is-used .lifeline__cost { visibility: hidden; }
+.lifeline.is-armed {
+  opacity: 1;
+  background: var(--gold);
+  transform: translateY(var(--lift));
+  box-shadow: 0 0 0 var(--ink);
+  animation: armed 1.2s ease-in-out infinite;
+}
+@keyframes armed { 50% { filter: brightness(1.12); } }
+.lifeline.is-armed .lifeline__cost { visibility: hidden; }
+
+/* the audience's vote, drawn as a bar along the bottom of each answer */
+.answer { position: relative; overflow: hidden; }
+.answer__poll {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 7px;
+  background: rgba(43, 33, 66, .08);
+}
+.answer__poll i {
+  display: block;
+  height: 100%;
+  width: var(--pct);
+  background: var(--accent);
+  animation: poll .6s cubic-bezier(.2, .9, .3, 1) both;
+}
+@keyframes poll { from { width: 0; } }
+.answer__poll b {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  font-family: "Baloo 2", sans-serif;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--accent-deep);
+}
+.answer.is-right .answer__poll b, .answer.is-wrong .answer__poll b { color: #fff; }
+
+/* an answer struck out by Second chance */
+.answer.is-struck { text-decoration: line-through; text-decoration-thickness: 3px; }
 
 /* ───────── the question ───────── */
 
@@ -1386,7 +1491,8 @@ kbd {
   .answer__text { font-size: 18px; }
   .rung.is-check { flex-basis: 22px; height: 22px; font-size: 11px; }
   .ladder { gap: 2px; }
-  .lifelines__note { font-size: 13px; }
+  .lifelines { gap: 6px; }
+  .lifeline__name { font-size: 12.5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
