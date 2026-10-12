@@ -51,17 +51,31 @@ window.Daily = (function () {
     return a;
   }
 
-  // [{ item, order }] — order is the answers in the places they are shown
-  function questionsFor(key, bank) {
+  // Today's question ids, one per slot. Picked from the bank sorted by id,
+  // so the order questions sit in the files doesn't matter.
+  function idsFor(key, bank) {
     const rand = rng(Number(key.replace(/-/g, '')));
     const used = new Set();
     return SLOTS.map((diff) => {
       const pool = bank
         .filter((q) => q.difficulty === diff && !used.has(q.id))
-        .sort((a, b) => (a.id < b.id ? -1 : 1));      // independent of file order
+        .sort((a, b) => (a.id < b.id ? -1 : 1));
       const item = pool[Math.floor(rand() * pool.length)];
       used.add(item.id);
-      return { item, order: shuffled(item.answers, rand) };
+      return item.id;
+    });
+  }
+
+  // [{ item, order }] — order is the answers in the places they are shown,
+  // seeded by the day and the question so everyone sees the same layout.
+  // Pass the ids saved when the day was started: if the bank has grown since,
+  // the quiz someone is half-way through stays the same quiz.
+  function questionsFor(key, bank, get, ids) {
+    return (ids || idsFor(key, bank)).map((id) => {
+      const item = get(id);
+      let h = 0;
+      for (const ch of key + id) h = Math.imul(h ^ ch.charCodeAt(0), 16777619) >>> 0;
+      return { item, order: shuffled(item.answers, rng(h)) };
     });
   }
 
@@ -95,5 +109,5 @@ window.Daily = (function () {
     return h ? h + 'h ' + (mins % 60) + 'm' : mins + 'm';
   }
 
-  return { LENGTH: SLOTS.length, today, dateOf, questionsFor, isDone, streak, week, untilTomorrow };
+  return { LENGTH: SLOTS.length, today, dateOf, idsFor, questionsFor, isDone, streak, week, untilTomorrow };
 })();

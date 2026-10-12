@@ -7,11 +7,11 @@
 <meta name="theme-color" content="#79cbf2">
 <meta name="apple-mobile-web-app-title" content="Endless Quiz">
 <link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" href="assets/favicon-32.png?v=8" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=8">
+<link rel="icon" href="assets/favicon-32.png?v=9" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=9">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts.css?v=8">
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="fonts.css?v=9">
+<link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
 
@@ -33,7 +33,7 @@
         <span class="choice__ladder" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
         <span class="choice__body">
           <span class="choice__name">The Climb</span>
-          <span class="choice__sub" id="home-climb-sub">20 rungs, a safety net every 4</span>
+          <span class="choice__sub" id="home-climb-sub">100 levels, from easy to brain-melting</span>
         </span>
         <span class="choice__go" aria-hidden="true">&rsaquo;</span>
       </button>
@@ -55,7 +55,7 @@
         <span class="choice__abc" aria-hidden="true"><i style="--k:var(--a)"></i><i style="--k:var(--b)"></i><i style="--k:var(--c)"></i></span>
         <span class="choice__body">
           <span class="choice__name">Quick Play</span>
-          <span class="choice__sub">Pick how many questions and how hard</span>
+          <span class="choice__sub">Pick the difficulty, categories and how many</span>
         </span>
         <span class="choice__go" aria-hidden="true">&rsaquo;</span>
       </button>
@@ -121,7 +121,8 @@
   <section id="screen-results" class="screen">
     <div class="finish card card--single">
       <span class="finish__mode" id="fin-mode">Daily Quiz</span>
-      <h2 class="finish__score"><b id="fin-right">4</b><span>/</span><span id="fin-total">5</span></h2>
+      <h2 class="finish__score" id="fin-score"><b id="fin-right">4</b><span>/</span><span id="fin-total">5</span></h2>
+      <div class="finish__stars" id="fin-stars" aria-label="Stars" hidden><i></i><i></i><i></i></div>
       <p class="finish__line" id="fin-line">Great going!</p>
       <ol class="marks" id="fin-marks" aria-label="Your answers"></ol>
       <div class="finish__stats">
@@ -131,7 +132,9 @@
       <p class="finish__note" id="fin-note"></p>
       <div class="finish__actions">
         <button id="fin-share" class="btn btn--primary btn--wide" type="button">Share result</button>
+        <button id="fin-next" class="btn btn--primary btn--wide" type="button">Next level &rsaquo;</button>
         <button id="fin-again" class="btn btn--primary btn--wide" type="button">Play again</button>
+        <button id="fin-levels" class="btn btn--ghost btn--wide" type="button">All levels</button>
         <button id="fin-home" class="btn btn--ghost btn--wide" type="button">Home</button>
       </div>
     </div>
@@ -181,24 +184,55 @@
       <button class="btn btn--ghost" type="button" data-home>&larr; Home</button>
       <div class="subhead__title">
         <h2>Quick Play</h2>
-        <span>Your quiz, your rules</span>
+        <span>Deal your own quiz</span>
       </div>
       <span class="subhead__balance" aria-hidden="true"></span>
     </header>
 
     <div class="card card--single">
-      <div class="field">
-        <span class="field__label">How many questions</span>
-        <div class="seg" id="quick-count" role="radiogroup" aria-label="How many questions"></div>
+      <div class="setting">
+        <div class="setting__head">
+          <span class="setting__label">Difficulty</span>
+          <b id="quick-diff-name" class="setting__name">Mixed</b>
+        </div>
+        <input id="quick-diff" class="setting__slider" type="range" min="0" max="4" step="1" value="0"
+               aria-label="Difficulty" aria-valuetext="Mixed">
+        <div id="quick-ticks" class="setting__ticks" aria-hidden="true"></div>
       </div>
-      <div class="field">
-        <span class="field__label">Difficulty</span>
-        <div class="seg seg--wrap" id="quick-diff" role="radiogroup" aria-label="Difficulty"></div>
+      <p id="quick-blurb" class="difficulty__blurb"></p>
+
+      <div class="setting__head">
+        <span class="setting__label">Categories</span>
+        <button id="quick-all" class="link-btn" type="button">Select all</button>
       </div>
+      <div class="cats" id="quick-cats" role="group" aria-label="Categories"></div>
+
+      <div class="stepper">
+        <button id="count-down" class="btn stepper__step" type="button" aria-label="Fewer questions">&minus;</button>
+        <span class="stepper__count"><b id="quick-count">10</b> questions</span>
+        <button id="count-up" class="btn stepper__step" type="button" aria-label="More questions">+</button>
+      </div>
+
+      <button id="quick-play" class="btn btn--primary btn--wide" type="button">Deal me a quiz</button>
+      <label class="seed">
+        <span>Seed</span>
+        <input id="seed-input" type="text" inputmode="numeric" placeholder="random" autocomplete="off" maxlength="9">
+      </label>
       <p class="card__note" id="quick-note"></p>
-      <button id="quick-play" class="btn btn--primary btn--wide" type="button">Start</button>
-      <p class="card__note card__note--centre" id="quick-best"></p>
     </div>
+  </section>
+
+  <!-- ─────────────── climb levels ─────────────── -->
+  <section id="screen-levels" class="screen">
+    <header class="subhead">
+      <button class="btn btn--ghost" type="button" data-home>&larr; Home</button>
+      <div class="subhead__title">
+        <h2>The Climb</h2>
+        <span id="levels-note"></span>
+      </div>
+      <span class="subhead__balance" aria-hidden="true"></span>
+    </header>
+    <ol id="level-grid" class="level-grid"></ol>
   </section>
 
   <!-- ─────────────── settings ─────────────── -->
@@ -263,8 +297,9 @@
       <article class="card guide__card">
         <div class="guide__art" aria-hidden="true"><span class="mini-ladder" id="guide-ladder"></span></div>
         <h3 class="card__title">The Climb</h3>
-        <p>Climb 20 rungs, one right answer at a time. The questions get harder as you go: easy, normal, hard, then extra hard for the last four.</p>
-        <p><b>Safety nets</b> sit at rungs 4, 8, 12 and 16. Get one wrong and you fall back to the last net you passed — or to the bottom if you haven’t reached one yet.</p>
+        <p><b>100 levels</b>, each a ladder of 20 rungs, one right answer at a time. Early levels are mostly easy; later ones get properly tough. Within a level the questions get harder as you climb.</p>
+        <p><b>Safety nets</b> sit at rungs 4, 8, 12 and 16. Get one wrong and you fall back to the last net you passed — and meet a <b>different question</b> on the way back up.</p>
+        <p>Reach the top to unlock the next level. No falls earns <b>★★★</b>, one or two falls <b>★★</b>, more than that <b>★</b>.</p>
       </article>
 
       <article class="card guide__card">
@@ -278,10 +313,11 @@
 
       <article class="card guide__card">
         <div class="guide__art" aria-hidden="true">
-          <span class="seg seg--mini"><i class="is-on">5</i><i>10</i><i>20</i></span>
+          <span class="cats cats--mini"><i>🌍 Geography</i><i class="is-on">🪐 Space</i><i class="is-on">➗ Maths</i></span>
         </div>
         <h3 class="card__title">Quick Play</h3>
-        <p>Pick how many questions and how hard, then go. No ladder and no falling — just see how many you get right.</p>
+        <p>Pick a difficulty, the categories you like and how many questions, then deal. No ladder and no falling — just see how many you get right.</p>
+        <p>Every quiz has a <b>seed</b>. Give a friend the same seed and settings and they get exactly the same quiz.</p>
       </article>
 
       <article class="card guide__card">
@@ -305,7 +341,7 @@
 
 <dialog id="confirm" class="sheet" aria-labelledby="confirm-title">
   <h3 id="confirm-title" class="sheet__title">Reset everything?</h3>
-  <p class="sheet__body">Your coins, best climb, daily streak and Quick Play records will all be wiped. This can’t be undone.</p>
+  <p class="sheet__body">Your coins, Climb levels and stars, daily streak and Quick Play records will all be wiped. This can’t be undone.</p>
   <form method="dialog" class="sheet__actions">
     <button value="cancel" class="btn btn--ghost">Keep it</button>
     <button value="reset" class="btn btn--danger">Reset</button>
@@ -314,10 +350,12 @@
 
 <p id="toast" class="toast" role="status" hidden></p>
 
-<script src="js/questions.js?v=8"></script>
-<script src="js/store.js?v=8"></script>
-<script src="js/sound.js?v=8"></script>
-<script src="js/daily.js?v=8"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/questions.js?v=9"></script>
+<script src="js/bank.js?v=9"></script>
+<script src="js/levels.js?v=9"></script>
+<script src="js/store.js?v=9"></script>
+<script src="js/sound.js?v=9"></script>
+<script src="js/daily.js?v=9"></script>
+<script src="js/app.js?v=9"></script>
 </body>
 </html>

@@ -11,11 +11,11 @@ window.Store = (function () {
 
   const DEFAULTS = {
     coins: 100,
-    best: 0,                 // highest Climb rung ever cleared
-    climb: null,             // { rung, fiftyUses } while a climb is in progress
-    daily: {},               // 'YYYY-MM-DD' -> { marks: '1101', coins }
-    quickBest: {},           // 'mixed-10' -> best number right
-    quickPrefs: { count: 5, difficulty: 'mixed' },
+    levels: {},              // Climb level number -> stars earned (1–3)
+    climb: null,             // the climb in progress: { level, rung, shown, falls, fiftyUses, earned }
+    daily: {},               // 'YYYY-MM-DD' -> { ids, marks: '1101', coins }
+    quickBest: {},           // 'hard-10-all' -> best number right
+    quickPrefs: { count: 10, difficulty: 'mixed', cats: null },   // cats null = all
     settings: { sound: true, vibrate: true, explain: true },
   };
 
@@ -44,6 +44,8 @@ window.Store = (function () {
         Object.assign(data, saved);
         data.settings = Object.assign(fresh().settings, saved.settings);
         data.quickPrefs = Object.assign(fresh().quickPrefs, saved.quickPrefs);
+        // a climb saved before levels existed can't be resumed
+        if (data.climb && !data.climb.level) data.climb = null;
       }
     } catch (e) { /* unreadable: start fresh rather than crash */ }
     return data;
