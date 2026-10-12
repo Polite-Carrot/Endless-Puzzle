@@ -24,7 +24,7 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 10;
+  const BUILD = 11;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   const FIFTY_BASE = 25;

@@ -4,8 +4,9 @@ A quiz game in the same visual style as Color Match & Merge: bright sky,
 thick ink outlines, hard drop shadows.
 
 **Status: early build.** 100 Climb levels, the Daily Quiz, Quick Play with
-categories and seeds, settings and the guide all work. The bank holds 496
-written and fact-table questions plus endless generated maths.
+categories and seeds, settings and the guide all work. The bank holds 767
+written and fact-table questions plus endless generated maths — at least 20
+for every category at every difficulty.
 
 Open `index.html` in a browser. No build step or server is needed.
 
@@ -13,7 +14,7 @@ Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Page
 
 **Every release, bump the build number in three places together:** the `?v=`
 on the links in `index.html`, `BUILD` in `js/app.js`, and `version.json`
-(currently 10).
+(currently 11).
 GitHub Pages lets browsers keep files for ten minutes — the page itself
 included — so a phone can keep running an old build. The `?v=` stops a new
 page loading an old stylesheet; `version.json` (fetched uncached on start
@@ -109,11 +110,10 @@ repeat is as far from its last appearance as the bank allows, and spreads
 categories within each level. About one slot in eight is generated maths.
 It prints a report; the current one:
 
-- 4,000 question slots (2,000 rungs × main + backup); 464 generated
-- 385 distinct facts behind the 496 written/table questions (a capital asked
-  both ways round is one fact), each used ~9 times across the 100 levels
+- 4,000 question slots (2,000 rungs × main + backup); 516 generated
+- 656 distinct facts used, each ~5 times across the 100 levels
 - no level asks the same fact twice, even split across main and backup
-- a fact comes back after at least 3 levels, typically 8
+- a fact comes back after at least 6 levels, typically 12
 
 More written questions widen that gap — add to the bank, rebuild, and the
 report shows the difference.
@@ -132,7 +132,7 @@ Questions come from three places, all with the same shape:
 
 | Source | Where | How many |
 |--------|-------|---------:|
-| Written by hand | `js/questions.js` | 142 |
+| Written by hand | `js/questions.js` | 413 |
 | Fact tables — capitals, elements, planets, baby animals, animal groups, animal kinds, plurals, opposites, spellings, shapes, units and time | `js/bank.js` | 354 |
 | Generators — 22 kinds of maths and Roman numerals | `js/bank.js` | endless |
 
@@ -162,12 +162,21 @@ four different answers, the right one never repeated among the wrong ones,
 known category and difficulty, an explanation, no duplicates. Run it after
 adding questions.
 
-| Difficulty | Written + table | Generators |
-|------------|----------------:|-----------:|
-| Easy       | 79              | 4 kinds    |
-| Normal     | 130             | 6 kinds    |
-| Hard       | 166             | 6 kinds    |
-| Extra Hard | 121             | 6 kinds    |
+| Category  | Easy | Normal | Hard | Extra Hard |
+|-----------|-----:|-------:|-----:|-----------:|
+| Maths     | 7 + generated | 6 + generated | 6 + generated | 4 + generated |
+| Space     | 21 | 22 | 22 | 21 |
+| Science   | 21 | 22 | 22 | 23 |
+| Geography | 22 | 22 | 37 | 32 |
+| Nature    | 21 | 21 | 22 | 22 |
+| History   | 21 | 22 | 22 | 22 |
+| Words     | 22 | 21 | 22 | 22 |
+| General   | 21 | 22 | 21 | 22 |
+
+Those are distinct facts. **Every category has at least 20 at every
+difficulty**, so a 20-question Quick Play game on a single category never
+runs short — checked by dealing all 40 combinations (8 categories × 4
+difficulties + Mixed) and confirming 20 different questions each time.
 
 ## Settings
 
