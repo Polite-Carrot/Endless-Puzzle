@@ -25,7 +25,7 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 13;
+  const BUILD = 14;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   const FIFTY_BASE = 25;
@@ -945,6 +945,17 @@
       els.next.click();
     }
   });
+
+  /* ───────── an app, not a page ─────────
+     The stylesheet already stops text being selected. These close the
+     other doors: the long-press / right-click menu, copying (in case a
+     selection sneaks through), and dragging pictures out. The seed box
+     still works normally, since it's the one place people type. */
+  const typing = (e) => e.target.closest && e.target.closest('input, textarea');
+  document.addEventListener('contextmenu', (e) => { if (!typing(e)) e.preventDefault(); });
+  ['copy', 'cut'].forEach((type) => document.addEventListener(type, (e) => { if (!typing(e)) e.preventDefault(); }));
+  document.addEventListener('dragstart', (e) => e.preventDefault());
+  document.addEventListener('selectstart', (e) => { if (!typing(e)) e.preventDefault(); });
 
   /* ───────── staying up to date ─────────
      GitHub Pages lets browsers keep the page itself for ten minutes, and a

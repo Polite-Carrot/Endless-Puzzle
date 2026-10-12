@@ -53,7 +53,16 @@ html, body {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  /* This is an app, not a page: nothing to select, copy or look up. No
+     text selection, no iOS long-press callout (copy / look up / share),
+     and images can't be dragged out. The seed box is the one place typing
+     happens, so it stays selectable below. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
+img { -webkit-user-drag: none; user-drag: none; }
+input, textarea { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 
 body {
   background-color: var(--sky-mid);
