@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Endless Quiz</title>
 <link rel="icon" href="assets/app-icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="fonts.css?v=3">
-<link rel="stylesheet" href="styles.css?v=3">
+<link rel="stylesheet" href="fonts.css?v=5">
+<link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
 
@@ -33,32 +33,36 @@
         <span class="choice__go" aria-hidden="true">&rsaquo;</span>
       </button>
 
-      <button id="go-daily" class="choice" type="button" data-soon>
+      <button id="go-daily" class="choice" type="button">
         <span class="choice__cal" aria-hidden="true">
           <i class="choice__cal-top"></i>
           <i class="choice__cal-dot"></i><i class="choice__cal-dot"></i>
-          <i class="choice__cal-dot"></i><i class="choice__cal-dot is-on"></i>
+          <i class="choice__cal-dot"></i><i class="choice__cal-dot"></i>
         </span>
         <span class="choice__body">
-          <span class="choice__name">Daily Quiz <em class="soon">Soon</em></span>
-          <span class="choice__sub">10 questions, the same for everyone</span>
+          <span class="choice__name">Daily Quiz</span>
+          <span class="choice__sub" id="home-daily-sub">5 questions, the same for everyone</span>
         </span>
         <span class="choice__go" aria-hidden="true">&rsaquo;</span>
       </button>
 
-      <button id="go-quick" class="choice" type="button" data-soon>
+      <button id="go-quick" class="choice" type="button">
         <span class="choice__abc" aria-hidden="true"><i style="--k:var(--a)"></i><i style="--k:var(--b)"></i><i style="--k:var(--c)"></i></span>
         <span class="choice__body">
-          <span class="choice__name">Quick Play <em class="soon">Soon</em></span>
+          <span class="choice__name">Quick Play</span>
           <span class="choice__sub">Pick how many questions and how hard</span>
         </span>
         <span class="choice__go" aria-hidden="true">&rsaquo;</span>
       </button>
     </div>
 
+    <p id="save-warning" class="save-warning" role="status" hidden>
+      This browser isn’t saving progress — it will reset when the page closes.
+    </p>
+
     <footer class="menu-foot">
-      <button id="how-to" class="btn btn--ghost" type="button">How to play</button>
-      <button id="settings" class="btn btn--ghost" type="button" data-soon>Settings</button>
+      <button id="go-howto" class="btn btn--ghost" type="button">How to play</button>
+      <button id="go-settings" class="btn btn--ghost" type="button">Settings</button>
     </footer>
   </section>
 
@@ -68,15 +72,17 @@
       <button id="back" class="btn btn--ghost" type="button">&larr; Menu</button>
       <div class="topbar__title">
         <h2 id="q-title">Rung 1</h2>
-        <span id="q-sub">Climb</span>
+        <span id="q-sub">The Climb</span>
       </div>
       <div class="topbar__stats">
         <span class="stat stat--coins"><b><i class="coin" aria-hidden="true"></i><span id="stat-coins">0</span></b><small>coins</small></span>
-        <span class="stat"><b id="stat-streak">0</b><small>streak</small></span>
+        <span class="stat"><b id="stat-two">0</b><small id="stat-two-label">streak</small></span>
       </div>
     </header>
 
     <div class="ladder" id="ladder" role="img" aria-label="Ladder"></div>
+
+    <div class="progress" id="progress" role="img" aria-label="Progress" hidden></div>
 
     <article class="question" id="question">
       <div class="question__tags">
@@ -106,22 +112,207 @@
     </div>
   </section>
 
+  <!-- ─────────────── results (daily and quick play) ─────────────── -->
+  <section id="screen-results" class="screen">
+    <div class="finish card card--single">
+      <span class="finish__mode" id="fin-mode">Daily Quiz</span>
+      <h2 class="finish__score"><b id="fin-right">4</b><span>/</span><span id="fin-total">5</span></h2>
+      <p class="finish__line" id="fin-line">Great going!</p>
+      <ol class="marks" id="fin-marks" aria-label="Your answers"></ol>
+      <div class="finish__stats">
+        <span class="stat stat--coins"><b><i class="coin" aria-hidden="true"></i><span id="fin-coins">+0</span></b><small>earned</small></span>
+        <span class="stat"><b id="fin-extra">0</b><small id="fin-extra-label">streak</small></span>
+      </div>
+      <p class="finish__note" id="fin-note"></p>
+      <div class="finish__actions">
+        <button id="fin-share" class="btn btn--primary btn--wide" type="button">Share result</button>
+        <button id="fin-again" class="btn btn--primary btn--wide" type="button">Play again</button>
+        <button id="fin-home" class="btn btn--ghost btn--wide" type="button">Home</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── daily ─────────────── -->
+  <section id="screen-daily" class="screen">
+    <header class="subhead">
+      <button class="btn btn--ghost" type="button" data-home>&larr; Home</button>
+      <div class="subhead__title">
+        <h2>Daily Quiz</h2>
+        <span id="daily-date"></span>
+      </div>
+      <span class="subhead__balance" aria-hidden="true"></span>
+    </header>
+
+    <div class="card card--single">
+      <ol class="week" id="daily-week" aria-label="The last seven days"></ol>
+      <div class="daily-streak">
+        <span class="flame" aria-hidden="true"></span>
+        <span><b id="daily-streak">0</b> day streak</span>
+      </div>
+    </div>
+
+    <div class="card card--single daily-today">
+      <div id="daily-ready">
+        <h3 class="card__title">Today’s quiz</h3>
+        <ul class="facts">
+          <li><b>5</b> questions, easy to extra hard</li>
+          <li><b>One go</b> — the same quiz for everyone today</li>
+          <li><b>No 50/50</b> — just you</li>
+        </ul>
+        <button id="daily-play" class="btn btn--primary btn--wide" type="button">Play today’s quiz</button>
+      </div>
+      <div id="daily-done" hidden>
+        <h3 class="card__title">Today: <span id="daily-score">0/5</span></h3>
+        <ol class="marks" id="daily-marks"></ol>
+        <p class="card__note">Next quiz in <b id="daily-next">—</b></p>
+        <button id="daily-share" class="btn btn--primary btn--wide" type="button">Share result</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── quick play ─────────────── -->
+  <section id="screen-quick" class="screen">
+    <header class="subhead">
+      <button class="btn btn--ghost" type="button" data-home>&larr; Home</button>
+      <div class="subhead__title">
+        <h2>Quick Play</h2>
+        <span>Your quiz, your rules</span>
+      </div>
+      <span class="subhead__balance" aria-hidden="true"></span>
+    </header>
+
+    <div class="card card--single">
+      <div class="field">
+        <span class="field__label">How many questions</span>
+        <div class="seg" id="quick-count" role="radiogroup" aria-label="How many questions"></div>
+      </div>
+      <div class="field">
+        <span class="field__label">Difficulty</span>
+        <div class="seg seg--wrap" id="quick-diff" role="radiogroup" aria-label="Difficulty"></div>
+      </div>
+      <p class="card__note" id="quick-note"></p>
+      <button id="quick-play" class="btn btn--primary btn--wide" type="button">Start</button>
+      <p class="card__note card__note--centre" id="quick-best"></p>
+    </div>
+  </section>
+
+  <!-- ─────────────── settings ─────────────── -->
+  <section id="screen-settings" class="screen">
+    <header class="subhead">
+      <button class="btn btn--ghost" type="button" data-home>&larr; Home</button>
+      <div class="subhead__title">
+        <h2>Settings</h2>
+        <span>Make it yours</span>
+      </div>
+      <span class="subhead__balance" aria-hidden="true"></span>
+    </header>
+
+    <div class="card card--single">
+      <label class="toggle">
+        <span class="toggle__text"><b>Sound effects</b><small>Blips for right and wrong answers</small></span>
+        <input type="checkbox" id="set-sound">
+        <span class="toggle__switch" aria-hidden="true"></span>
+      </label>
+      <label class="toggle" id="set-vibrate-row">
+        <span class="toggle__text"><b>Vibration</b><small>A buzz when you get one wrong</small></span>
+        <input type="checkbox" id="set-vibrate">
+        <span class="toggle__switch" aria-hidden="true"></span>
+      </label>
+      <label class="toggle">
+        <span class="toggle__text"><b>Explanations</b><small>A fun fact after every answer</small></span>
+        <input type="checkbox" id="set-explain">
+        <span class="toggle__switch" aria-hidden="true"></span>
+      </label>
+    </div>
+
+    <div class="card card--single">
+      <h3 class="card__title card__title--small">Your progress</h3>
+      <dl class="tally" id="tally"></dl>
+      <button id="reset" class="btn btn--danger btn--wide" type="button">Reset progress</button>
+    </div>
+
+    <p class="version" id="version"></p>
+  </section>
+
+  <!-- ─────────────── how to play ─────────────── -->
+  <section id="screen-howto" class="screen">
+    <header class="subhead">
+      <button class="btn btn--ghost" type="button" data-home>&larr; Home</button>
+      <div class="subhead__title">
+        <h2>How to play</h2>
+        <span>Everything in one place</span>
+      </div>
+      <span class="subhead__balance" aria-hidden="true"></span>
+    </header>
+
+    <div class="guide">
+      <article class="card guide__card">
+        <div class="guide__art guide__art--answer" aria-hidden="true">
+          <span class="mini-answer"><i style="--k:var(--a)">A</i>Saturn</span>
+          <span class="mini-answer is-right"><i>B</i>Jupiter</span>
+        </div>
+        <h3 class="card__title">Answering</h3>
+        <p>Every question has four answers and one is right. Tap the one you think it is — or press <kbd>1</kbd>–<kbd>4</kbd> on a keyboard. Green is right, red is wrong.</p>
+      </article>
+
+      <article class="card guide__card">
+        <div class="guide__art" aria-hidden="true"><span class="mini-ladder" id="guide-ladder"></span></div>
+        <h3 class="card__title">The Climb</h3>
+        <p>Climb 20 rungs, one right answer at a time. The questions get harder as you go: easy, normal, hard, then extra hard for the last four.</p>
+        <p><b>Safety nets</b> sit at rungs 4, 8, 12 and 16. Get one wrong and you fall back to the last net you passed — or to the bottom if you haven’t reached one yet.</p>
+      </article>
+
+      <article class="card guide__card">
+        <div class="guide__art" aria-hidden="true">
+          <span class="marks marks--mini"><i class="is-right"></i><i class="is-right"></i><i class="is-wrong"></i><i class="is-right"></i><i class="is-right"></i></span>
+        </div>
+        <h3 class="card__title">Daily Quiz</h3>
+        <p>Five questions a day, from easy to extra hard. Everyone gets the same quiz, and you only get one go — so share your result and see how friends do.</p>
+        <p>Play every day to build a <b>streak</b>. A new quiz arrives at midnight.</p>
+      </article>
+
+      <article class="card guide__card">
+        <div class="guide__art" aria-hidden="true">
+          <span class="seg seg--mini"><i class="is-on">5</i><i>10</i><i>20</i></span>
+        </div>
+        <h3 class="card__title">Quick Play</h3>
+        <p>Pick how many questions and how hard, then go. No ladder and no falling — just see how many you get right.</p>
+      </article>
+
+      <article class="card guide__card">
+        <div class="guide__art" aria-hidden="true">
+          <span class="lifeline lifeline--mini"><b>50/50</b><span class="lifeline__cost"><i class="coin"></i>25</span></span>
+        </div>
+        <h3 class="card__title">Coins &amp; the 50/50</h3>
+        <p>Every right answer earns coins. Harder questions pay more:</p>
+        <table class="pay">
+          <tr><td><span class="pill" style="--diff:var(--easy)">Easy</span></td><td><i class="coin"></i> 5</td></tr>
+          <tr><td><span class="pill" style="--diff:var(--normal)">Normal</span></td><td><i class="coin"></i> 10</td></tr>
+          <tr><td><span class="pill" style="--diff:var(--hard)">Hard</span></td><td><i class="coin"></i> 15</td></tr>
+          <tr><td><span class="pill" style="--diff:var(--xhard)">Extra Hard</span></td><td><i class="coin"></i> 25</td></tr>
+        </table>
+        <p>Stuck? The <b>50/50</b> removes two wrong answers. It costs 25 coins, and the price <b>doubles</b> every time you use it in the same game. A question answered with a 50/50 pays half.</p>
+      </article>
+    </div>
+  </section>
+
 </div>
 
-<dialog id="how-dialog" class="sheet" aria-labelledby="how-title">
-  <h3 id="how-title" class="sheet__title">How to play</h3>
-  <ul class="sheet__list">
-    <li><b>Climb 20 rungs.</b> Each right answer takes you up one. The questions get harder as you go.</li>
-    <li><b>Safety nets at 4, 8, 12 and 16.</b> Get one wrong and you fall back to the last net you passed.</li>
-    <li><b>Earn coins</b> for every right answer. Harder questions pay more.</li>
-    <li><b>Stuck? Use a 50/50</b> to remove two wrong answers. It costs coins, and the price doubles every time you use it in a climb.</li>
-  </ul>
-  <form method="dialog"><button class="btn btn--primary btn--wide">Got it</button></form>
+<dialog id="confirm" class="sheet" aria-labelledby="confirm-title">
+  <h3 id="confirm-title" class="sheet__title">Reset everything?</h3>
+  <p class="sheet__body">Your coins, best climb, daily streak and Quick Play records will all be wiped. This can’t be undone.</p>
+  <form method="dialog" class="sheet__actions">
+    <button value="cancel" class="btn btn--ghost">Keep it</button>
+    <button value="reset" class="btn btn--danger">Reset</button>
+  </form>
 </dialog>
 
 <p id="toast" class="toast" role="status" hidden></p>
 
-<script src="js/questions.js?v=3"></script>
-<script src="js/app.js?v=3"></script>
+<script src="js/questions.js?v=5"></script>
+<script src="js/store.js?v=5"></script>
+<script src="js/sound.js?v=5"></script>
+<script src="js/daily.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
 </body>
 </html>
