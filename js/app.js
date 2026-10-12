@@ -17,6 +17,8 @@
   'use strict';
 
   const VERSION = '0.4';
+  // Must match version.json and the ?v= on index.html's links. Bump all three together.
+  const BUILD = 7;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   const FIFTY_BASE = 25;
@@ -722,6 +724,34 @@
     }
   });
 
+  /* ───────── staying up to date ─────────
+     GitHub Pages lets browsers keep the page itself for ten minutes, and a
+     phone can hold on to it far longer. A stale page loads stale scripts,
+     so the game asks for version.json — never cached — and if a newer build
+     is out it reloads onto a fresh URL, which no cache can answer. The
+     sessionStorage note stops it looping if the new build hasn't reached
+     every server yet. */
+
+  async function checkForUpdate() {
+    try {
+      const res = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!res.ok) return;
+      const { build } = await res.json();
+      if (!(build > BUILD)) return;
+      const tried = 'endless-quiz:reload-' + build;
+      if (sessionStorage.getItem(tried)) return;
+      sessionStorage.setItem(tried, '1');
+      // only between games, never in the middle of a question
+      if ($('screen-quiz').classList.contains('is-active') && !run.answered) return;
+      location.replace(location.pathname + '?build=' + build);
+    } catch (e) { /* offline, or opened from a file: carry on */ }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') checkForUpdate();
+  });
+
   applySettings();
   drawHome();
+  checkForUpdate();
 })();

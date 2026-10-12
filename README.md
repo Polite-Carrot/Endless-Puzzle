@@ -11,10 +11,13 @@ Open `index.html` in a browser. No build step or server is needed.
 
 Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Pages.
 
-**When you change a CSS or JS file, bump the `?v=` number on its links in
-`index.html`.** GitHub Pages lets browsers cache files for ten minutes, so
-without it a phone can pair the new page with an old stylesheet and show
-the menu unstyled.
+**Every release, bump the build number in three places together:** the `?v=`
+on the links in `index.html`, `BUILD` in `js/app.js`, and `version.json`.
+GitHub Pages lets browsers keep files for ten minutes — the page itself
+included — so a phone can keep running an old build. The `?v=` stops a new
+page loading an old stylesheet; `version.json` (fetched uncached on start
+and whenever the game comes back on screen) lets an old page notice a newer
+build exists and reload itself onto it, between questions.
 
 <p>
   <img src="screenshots/home.png" width="200" alt="Home">
