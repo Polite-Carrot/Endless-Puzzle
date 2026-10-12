@@ -1255,6 +1255,33 @@ body {
 }
 .tally dt { color: var(--ink-soft); font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
 .tally dd { margin: 0; font-family: "Baloo 2", sans-serif; font-weight: 800; font-size: 22px; line-height: 1.1; }
+.toggle.is-unavailable { cursor: default; }
+.toggle.is-unavailable .toggle__switch { opacity: .4; }
+.time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0 2px;
+  border-top: 2px dashed var(--ink-faint);
+  font-weight: 800;
+}
+.time-row[hidden] { display: none; }
+.time-row select {
+  appearance: none;
+  padding: 7px 34px 7px 12px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: 11px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232b2142' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 11px center;
+  color: var(--ink);
+  font: inherit;
+  font-family: "Baloo 2", sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  box-shadow: 0 3px 0 var(--ink);
+  cursor: pointer;
+}
+.time-row select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .version { margin: 18px 0 0; text-align: center; color: var(--ink-soft); font-size: 13px; }
 
 /* ───────── how to play ───────── */

@@ -17,7 +17,7 @@ window.Store = (function () {
     daily: {},               // 'YYYY-MM-DD' -> { ids, marks: '1101', coins }
     quickBest: {},           // 'hard-10-all' -> best number right
     quickPrefs: { count: 10, difficulty: 'mixed', cats: null },   // cats null = all
-    settings: { sound: true, vibrate: true, explain: true },
+    settings: { sound: true, vibrate: true, explain: true, reminder: false, reminderHour: 18 },
   };
 
   function probe() {

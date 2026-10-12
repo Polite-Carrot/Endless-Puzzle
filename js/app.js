@@ -25,7 +25,7 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 14;
+  const BUILD = 15;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   const FIFTY_BASE = 25;
@@ -577,6 +577,7 @@
         const rec = saved.daily[run.dailyKey];
         rec.marks = run.marks.map((m) => (m ? '1' : '0')).join('');
         rec.coins = run.earned;
+        if (Daily.isDone(rec)) syncReminders();   // today's reminder isn't needed now
       }
       last = run.marks.length === run.queue.length;
       drawProgress();
@@ -848,6 +849,7 @@
     $('set-explain').checked = saved.settings.explain;
     // iPhone and iPad browsers cannot vibrate, so don't offer it there
     $('set-vibrate-row').hidden = !navigator.vibrate;
+    drawReminder();
 
     const rows = [
       ['Coins', saved.coins],
@@ -877,10 +879,60 @@
     });
   });
 
+  /* ───────── daily reminder ───────── */
+
+  const hourLabel = (h) => (h % 12 || 12) + (h < 12 ? 'am' : 'pm');
+
+  function drawReminder() {
+    const native = Reminders.available();
+    const on = native && saved.settings.reminder;
+    $('set-reminder').checked = on;
+    $('set-reminder').disabled = !native;
+    $('reminder-row').classList.toggle('is-unavailable', !native);
+    $('reminder-note').textContent = native
+      ? 'A nudge when the Daily Quiz is ready'
+      : 'Comes with the iPhone and Android app';
+    $('reminder-time-row').hidden = !on;
+    const select = $('reminder-hour');
+    if (!select.options.length) {
+      for (let h = 7; h <= 22; h++) select.add(new Option(hourLabel(h), h));
+    }
+    select.value = saved.settings.reminderHour;
+  }
+
+  // Redo the week of reminders from the current state. Cheap, and safe to
+  // call often: it clears the queue and schedules it again.
+  function syncReminders() {
+    Reminders.sync(saved.settings, Daily.isDone(saved.daily[Daily.today()]), Daily.streak(saved.daily));
+  }
+
+  $('set-reminder').addEventListener('change', async (e) => {
+    if (e.target.checked) {
+      const allowed = await Reminders.requestPermission();
+      if (!allowed) {
+        e.target.checked = false;
+        toast('Turn on notifications for Endless Quiz in your phone’s settings');
+        return;
+      }
+    }
+    saved.settings.reminder = e.target.checked;
+    persist();
+    drawReminder();
+    syncReminders();
+    if (e.target.checked) toast('Reminder set for ' + hourLabel(saved.settings.reminderHour));
+  });
+  $('reminder-hour').addEventListener('change', (e) => {
+    saved.settings.reminderHour = Number(e.target.value);
+    persist();
+    syncReminders();
+    toast('Reminder moved to ' + hourLabel(saved.settings.reminderHour));
+  });
+
   $('reset').addEventListener('click', () => els.confirm.showModal());
   els.confirm.addEventListener('close', () => {
     if (els.confirm.returnValue !== 'reset') return;
     saved = Store.reset();
+    Reminders.cancelAll();
     run.mode = null;
     run.item = null;
     applySettings();
@@ -982,10 +1034,13 @@
   }
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') checkForUpdate();
+    if (document.visibilityState !== 'visible') return;
+    checkForUpdate();
+    syncReminders();   // a new day may have started while the app was away
   });
 
   applySettings();
   drawHome();
   checkForUpdate();
+  syncReminders();
 })();

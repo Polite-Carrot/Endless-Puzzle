@@ -14,7 +14,7 @@ Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Page
 
 **Every release, bump the build number in three places together:** the `?v=`
 on the links in `index.html`, `BUILD` in `js/app.js`, and `version.json`
-(currently 14).
+(currently 15).
 GitHub Pages lets browsers keep files for ten minutes — the page itself
 included — so a phone can keep running an old build. The `?v=` stops a new
 page loading an old stylesheet; `version.json` (fetched uncached on start
@@ -196,9 +196,55 @@ difficulties + Mixed) and confirming 20 different questions each time.
 ## Settings
 
 Sound effects, vibration (only offered where the browser can vibrate —
-iPhone and iPad browsers can't), and explanations after each answer. Also
+iPhone and iPad browsers can't), explanations after each answer, and a
+daily reminder (see below). Also
 shows your coins, Climb levels and daily streak, with a **Reset progress**
 button behind a confirmation.
+
+## Daily reminders
+
+A **Daily reminder** switch in Settings, with a time from 7am to 10pm (6pm to
+start). It uses Capacitor's **LocalNotifications** plugin, so it only works
+in the iPhone and Android app; in a browser the switch is greyed out and
+says reminders come with the app. Turning it on asks for notification
+permission; if the phone says no, the switch stays off and explains where to
+allow it.
+
+Rather than one repeating alarm, `js/reminders.js` schedules **the next
+seven days as separate notifications**, and redoes the whole set whenever
+the game opens, comes back on screen, finishes a Daily, or the setting
+changes. That lets it:
+
+- **skip today** once today's quiz is played (or the time has passed);
+- **mention the streak** — "Keep your 6-day streak going 🔥" — on the next
+  reminder when the streak is genuinely on the line, and not on a reminder
+  that would arrive after it has already ended;
+- **go quiet** a week after someone stops playing, rather than nagging forever.
+
+`Reminders.plan()` is pure — no phone needed — so the rules can be checked
+with plain dates.
+
+## Building the app
+
+Like Color Match & Merge, the game is wrapped with Capacitor:
+
+```
+npm install
+npx cap add ios          # first time only
+npx cap add android      # first time only
+npm run sync             # copy the game into www/ and into both projects
+npx cap open ios         # or: npx cap open android
+```
+
+`capacitor.config.js` runs `sync-web.js` whenever Capacitor reads it, so
+`npx cap sync` on its own always ships the current files. `sync-web.js`
+takes its file list from `index.html`'s own tags. App id:
+`com.politecarrot.endlessquiz`.
+
+Still to carry over from Color Match & Merge when the native projects are
+added: the Android `MainActivity` tweaks (fixed text zoom, no long-press
+selection on Samsung, edge-to-edge padding on Android 15+), the Polite Carrot
+splash, and a white notification icon for Android's status bar.
 
 ## Keeping progress
 
@@ -235,8 +281,10 @@ js/levels.js      generated — the Climb's levels per track, as question refere
 js/store.js       saving progress, and whether it can be trusted
 js/sound.js       oscillator blips
 js/daily.js       the daily seed, streak and week   (no DOM)
+js/reminders.js   daily reminder notifications (native app only)
 js/app.js         screens and the shared question screen for all three modes
 tools/check-bank.js    checks every question the bank can make
+package.json, capacitor.config.js, sync-web.js   the native app wrapper
 tools/build-levels.js  builds js/levels.js: keeps existing levels, deals new ones,
                        and reports on reuse
 ```

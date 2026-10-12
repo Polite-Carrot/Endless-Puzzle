@@ -1,0 +1,19 @@
+{
+  "name": "endless-quiz",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "check": "node tools/check-bank.js",
+    "levels": "node tools/build-levels.js",
+    "web:sync": "node sync-web.js",
+    "sync": "node sync-web.js && cap sync"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/local-notifications": "^8.3.1"
+  }
+}

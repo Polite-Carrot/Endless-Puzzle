@@ -7,11 +7,11 @@
 <meta name="theme-color" content="#79cbf2">
 <meta name="apple-mobile-web-app-title" content="Endless Quiz">
 <link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" href="assets/favicon-32.png?v=14" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=14">
+<link rel="icon" href="assets/favicon-32.png?v=15" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=15">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts.css?v=14">
-<link rel="stylesheet" href="styles.css?v=14">
+<link rel="stylesheet" href="fonts.css?v=15">
+<link rel="stylesheet" href="styles.css?v=15">
 </head>
 <body>
 
@@ -266,6 +266,18 @@
     </div>
 
     <div class="card card--single">
+      <label class="toggle" id="reminder-row">
+        <span class="toggle__text"><b>Daily reminder</b><small id="reminder-note">A nudge when the Daily Quiz is ready</small></span>
+        <input type="checkbox" id="set-reminder">
+        <span class="toggle__switch" aria-hidden="true"></span>
+      </label>
+      <label class="time-row" id="reminder-time-row">
+        <span>Remind me at</span>
+        <select id="reminder-hour" aria-label="Reminder time"></select>
+      </label>
+    </div>
+
+    <div class="card card--single">
       <h3 class="card__title card__title--small">Your progress</h3>
       <dl class="tally" id="tally"></dl>
       <button id="reset" class="btn btn--danger btn--wide" type="button">Reset progress</button>
@@ -351,12 +363,13 @@
 
 <p id="toast" class="toast" role="status" hidden></p>
 
-<script src="js/questions.js?v=14"></script>
-<script src="js/bank.js?v=14"></script>
-<script src="js/levels.js?v=14"></script>
-<script src="js/store.js?v=14"></script>
-<script src="js/sound.js?v=14"></script>
-<script src="js/daily.js?v=14"></script>
-<script src="js/app.js?v=14"></script>
+<script src="js/questions.js?v=15"></script>
+<script src="js/bank.js?v=15"></script>
+<script src="js/levels.js?v=15"></script>
+<script src="js/store.js?v=15"></script>
+<script src="js/sound.js?v=15"></script>
+<script src="js/daily.js?v=15"></script>
+<script src="js/reminders.js?v=15"></script>
+<script src="js/app.js?v=15"></script>
 </body>
 </html>
