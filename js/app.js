@@ -1,7 +1,7 @@
 /* Endless Quiz — the Climb.
  *
- * A run is a 20-rung ladder that gets harder as it goes. Rungs 4, 7 and 12
- * are safety nets: a wrong answer drops you back to the last one you passed, so
+ * A run is a 20-rung ladder that gets harder as it goes. Every fourth rung
+ * (4, 8, 12, 16) is a safety net: a wrong answer drops you back to the last one you passed, so
  * a mistake costs progress but never the whole run.
  *
  * Coins are earned by answering and spent on the 50/50. Its price doubles
@@ -13,7 +13,7 @@
   'use strict';
 
   const RUNGS = 20;
-  const CHECKPOINTS = [4, 7, 12];
+  const CHECKPOINTS = [4, 8, 12, 16];
   const START_COINS = 100;
   const FIFTY_BASE = 25;
   const KEYS = ['A', 'B', 'C', 'D'];
@@ -46,8 +46,8 @@
 
   function difficultyFor(rung) {
     if (rung <= 4) return 'easy';
-    if (rung <= 9) return 'normal';
-    if (rung <= 15) return 'hard';
+    if (rung <= 8) return 'normal';
+    if (rung <= 16) return 'hard';
     return 'xhard';
   }
 

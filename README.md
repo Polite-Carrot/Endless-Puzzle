@@ -20,12 +20,13 @@ A run is a **20-rung ladder** that gets harder as you go:
 | Rungs | Difficulty | Safety net |
 |-------|------------|------------|
 | 1–4   | Easy       | **4**      |
-| 5–9   | Normal     | **7**      |
-| 10–15 | Hard       | **12**     |
-| 16–20 | Extra Hard | none (the star is the top) |
+| 5–8   | Normal     | **8**      |
+| 9–12  | Hard       | **12**     |
+| 13–16 | Hard       | **16**     |
+| 17–20 | Extra Hard | none (the star is the top) |
 
-A wrong answer drops you back to the last safety net you passed, or to the
-bottom if you haven't reached rung 4 yet.
+There is a safety net every four rungs. A wrong answer drops you back to the
+last one you passed, or to the bottom if you haven't reached rung 4 yet.
 
 ## Coins and the 50/50
 
