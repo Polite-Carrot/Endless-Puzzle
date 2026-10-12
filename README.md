@@ -116,6 +116,10 @@ index.html        every screen: home, question, results, daily, quick play,
                   settings, how to play
 styles.css        all styling (tokens shared with Color Match & Merge)
 fonts.css         Baloo 2 + Nunito, inlined (copied from Color Match & Merge)
+assets/           app icon: app-icon.png is the 1024px master; the others are
+                  sized from it (home screen, manifest, favicon)
+manifest.webmanifest  name and icons for installing to a home screen
+version.json      the current build, checked on start to pick up updates
 js/questions.js   categories, difficulties, the question bank
 js/store.js       saving progress, and whether it can be trusted
 js/sound.js       oscillator blips
