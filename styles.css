@@ -823,47 +823,52 @@ body {
 /* ───────── result card ───────── */
 
 .result {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  margin-top: 18px;
+  margin-top: 14px;
   background: var(--paper);
   border: var(--stroke) solid var(--ink);
   border-radius: var(--radius);
-  padding: 14px 16px 16px;
-  box-shadow: 0 6px 0 var(--ink);
-  animation: rise .34s cubic-bezier(.2, .9, .3, 1.2) both;
+  padding: 10px 12px 12px;
+  box-shadow: 0 5px 0 var(--ink);
+  animation: rise .3s cubic-bezier(.2, .9, .3, 1.2) both;
 }
 .result[hidden] { display: none; }
-.result__head { display: flex; align-items: center; gap: 12px; }
+/* once answered, the lifelines (all spent or switched off by then) and
+   their note make way for the verdict */
+#screen-quiz.is-answered .lifelines,
+#screen-quiz.is-answered .lifelines__note { display: none; }
+.result__head { display: flex; align-items: center; gap: 10px; }
 .result__mark {
   display: grid;
   place-items: center;
-  flex: 0 0 40px;
-  width: 40px; height: 40px;
+  flex: 0 0 34px;
+  width: 34px; height: 34px;
   border-radius: 99px;
   border: var(--stroke) solid var(--ink);
   color: #fff;
   font-family: "Baloo 2", sans-serif;
   font-weight: 800;
-  font-size: 22px;
+  font-size: 19px;
   line-height: 1;
 }
 .result.is-right .result__mark { background: var(--grass); }
 .result.is-wrong .result__mark { background: var(--danger); }
 .result__title {
+  flex: 1;
+  min-width: 0;
   margin: 0;
   font-family: "Baloo 2", sans-serif;
   font-weight: 800;
-  font-size: 24px;
+  font-size: 20px;
   line-height: 1.1;
 }
+.result__next { flex: none; padding: 10px 16px; white-space: nowrap; }
 .result__why {
-  margin: 6px 0 14px;
+  margin: 8px 0 0;
   color: var(--ink-soft);
-  font-size: 15px;
-  line-height: 1.45;
+  font-size: 14.5px;
+  line-height: 1.4;
 }
+.result__why[hidden] { display: none; }
 
 /* ───────── screens below home ───────── */
 
@@ -1545,6 +1550,47 @@ kbd {
   .ladder { gap: 2px; }
   .lifelines { gap: 6px; }
   .lifeline__name { font-size: 12.5px; }
+}
+
+/* ───────── short screens ─────────
+   An iPhone SE, or a bigger iPhone once the notch, home bar or Safari's
+   bars take their share. Everything on the question screen tightens up so
+   the question, the lifelines and all four answers fit without scrolling. */
+
+@media (max-height: 780px) {
+  .app {
+    padding-top: calc(8px + env(safe-area-inset-top));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  .topbar { padding: 7px 10px; }
+  .topbar .btn { padding: 7px 10px; }
+  .stat { padding: 3px 6px; }
+  .stat b { font-size: 18px; }
+  .ladder { margin-top: 12px; }
+  .progress { margin-top: 12px; }
+  .question { margin-top: 12px; padding: 10px 14px 14px; }
+  .question__text { margin-top: 10px; font-size: clamp(22px, 6.2vw, 30px); }
+  .lifelines__note { margin-top: 10px; font-size: 13px; }
+  .lifelines { margin-top: 6px; }
+  .lifeline { padding: 4px 4px 5px; }
+  .lifeline__icon { font-size: 15px; height: 17px; line-height: 17px; }
+  .result { margin-top: 12px; }
+  .answers { margin-top: 12px; gap: 9px; }
+  .answer { padding: 6px 12px 6px 6px; gap: 12px; }
+  .answer__key { flex-basis: 34px; width: 34px; height: 34px; font-size: 18px; border-radius: 10px; }
+  .answer__text { font-size: 18px; }
+  .subhead { margin-bottom: 12px; }
+}
+
+@media (max-height: 690px) {
+  .tag { font-size: 11px; padding-top: 1px; padding-bottom: 1px; }
+  .tag--cat i { width: 20px; height: 20px; font-size: 11px; }
+  .question__text { margin-top: 8px; font-size: clamp(20px, 5.8vw, 26px); }
+  .lifeline__icon { display: none; }
+  .answers { gap: 8px; }
+  .answer { padding-top: 5px; padding-bottom: 5px; }
+  .answer__key { flex-basis: 32px; width: 32px; height: 32px; }
+  .answer__text { font-size: 17px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

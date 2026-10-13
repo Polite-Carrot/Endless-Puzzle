@@ -302,6 +302,24 @@ added: the Android `MainActivity` tweaks (fixed text zoom, no long-press
 selection on Samsung, edge-to-edge padding on Android 15+), the Polite Carrot
 splash, and a white notification icon for Android's status bar.
 
+### Screen size and text size
+
+The question screen fits on an iPhone SE (2nd gen) without scrolling, and so
+does everything else bar the long lists (levels, settings, how to play).
+Screens shorter than 780pt (the SE, and bigger iPhones once the notch, home
+bar or Safari's bars take their share) get a tighter layout from the
+`max-height` media queries at the end of `styles.css`, with a tighter one
+still below 690pt. Once a question is answered, the lifelines make way for
+the verdict and the Next button, so nothing covers the answers.
+
+**Text size:** the phone's own text-size setting (Dynamic Type on iPhone,
+Font size on Android) can make the game's text smaller but never bigger than
+standard. `Native.capTextSize()` reads it with Capacitor's TextZoom plugin and
+sets the web view to the smaller of that and 100%, at start-up and whenever
+the app comes back on screen. If the Android `MainActivity` from Color Match
+& Merge is carried over, leave out its fixed `setTextZoom` so the two don't
+fight.
+
 ## Keeping progress
 
 Coins, the climb in progress, stars per level, daily results, Quick Play

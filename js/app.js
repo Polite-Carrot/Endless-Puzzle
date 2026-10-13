@@ -28,7 +28,7 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 19;
+  const BUILD = 20;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   // Lifelines: starting price, and what each costs after n uses this game
@@ -597,6 +597,7 @@
     render(item, order);
     els.result.hidden = true;
     els.result.classList.remove('is-right', 'is-wrong');
+    $('screen-quiz').classList.remove('is-answered');
     document.querySelector('.app').scrollTo({ top: 0 });
     coach(TIPS_FOR[run.mode]);
   }
@@ -779,7 +780,9 @@
       pay(earned);
     }
 
-    let title = right ? (earned ? 'Correct! +' + earned : 'Correct!') : 'Not quite — it’s ' + correct;
+    // "it’s the penguin", not "it’s The penguin"
+    const named = correct.replace(/^(The|A|An) /, (w) => w.toLowerCase());
+    let title = right ? (earned ? 'Correct! +' + earned : 'Correct!') : 'Not quite — it’s ' + named;
     let extra = '';
     let sound = right ? 'right' : 'wrong';
     let last = false;
@@ -840,13 +843,18 @@
     els.resultTitle.textContent = title;
     els.why.textContent = [saved.settings.explain ? item.why : '', extra].filter(Boolean).join(' ');
     els.why.hidden = !els.why.textContent;
-    els.next.innerHTML = last ? 'See results &rsaquo;' : 'Next question &rsaquo;';
+    els.next.innerHTML = last ? 'Results &rsaquo;' : 'Next &rsaquo;';
+    // The verdict takes the lifelines' place, between the question and the
+    // answers, so it never covers the answer just picked.
+    $('screen-quiz').classList.add('is-answered');
     els.result.hidden = false;
     els.next.focus({ preventScroll: true });
-    // On a short screen the card would sit over the answer just picked;
-    // scrolling to its natural place keeps both in view.
+    // If it all doesn't fit, scroll as far as showing the answers needs,
+    // but never so far that the verdict goes off the top.
     const app = document.querySelector('.app');
-    app.scrollTo({ top: app.scrollHeight, behavior: 'smooth' });
+    const over = els.answers.getBoundingClientRect().bottom - app.getBoundingClientRect().bottom + 12;
+    const room = els.result.getBoundingClientRect().top - app.getBoundingClientRect().top - 8;
+    if (over > 0) app.scrollBy({ top: Math.min(over, room), behavior: 'smooth' });
   }
 
   function next() {
@@ -1358,10 +1366,12 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
     checkForUpdate();
+    Native.capTextSize();
     syncReminders();   // a new day may have started while the app was away
   });
 
   applySettings();
+  Native.capTextSize();
   drawHome();
   checkForUpdate();
   // In the app, the phone keeps its own copy of progress. If the web copy was

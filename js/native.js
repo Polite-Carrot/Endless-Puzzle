@@ -49,5 +49,20 @@ window.Native = (function () {
     }
   }
 
-  return { isNative, haptic, canHaptic, share, prefs: plugin('Preferences') };
+  // The phone's text-size setting (Dynamic Type on iPhone, Font size on
+  // Android) would otherwise scale the game's text — on Android it does by
+  // default — and a quiz laid out to fit one screen spills off it. Smaller
+  // than standard is fine; bigger is capped at standard (1 = 100%). Called
+  // at start-up and whenever the app comes back, as the setting may have
+  // changed while it was away.
+  async function capTextSize() {
+    const T = plugin('TextZoom');
+    if (!T) return;
+    try {
+      const { value } = await T.getPreferred();
+      await T.set({ value: Math.min(value || 1, 1) });
+    } catch (e) { /* leave it as it is */ }
+  }
+
+  return { isNative, haptic, canHaptic, share, capTextSize, prefs: plugin('Preferences') };
 })();

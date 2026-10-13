@@ -17,6 +17,7 @@
     "@capacitor/ios": "^8.5.0",
     "@capacitor/local-notifications": "^8.3.1",
     "@capacitor/preferences": "^8.0.0",
-    "@capacitor/share": "^8.0.0"
+    "@capacitor/share": "^8.0.0",
+    "@capacitor/text-zoom": "^8.0.1"
   }
 }
