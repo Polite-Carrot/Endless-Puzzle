@@ -17,17 +17,18 @@
  * deal comes from a seed, so the same seed and settings deal the same quiz
  * — answers in the same places — for anyone.
  *
- * Coins are earned by answering and spent on lifelines — 50/50, Ask the
+ * Coins are scarce on purpose: a climbed level or a good Daily Quiz pays
+ * about one lifeline (see PAY). They're spent on lifelines — 50/50, Ask the
  * audience, Swap and Second chance. Each one's price doubles every time it is
- * used in a game, each can be used once per question, and a question got
- * right with help pays half — so they're a rescue, not a habit. No lifelines
- * in the Daily Quiz, so everyone's score there means the same thing. */
+ * used in a game and each can be used once per question — so they're a
+ * rescue, not a habit. No lifelines in the Daily Quiz, so everyone's score
+ * there means the same thing. */
 (function () {
   'use strict';
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 17;
+  const BUILD = 18;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   // Lifelines: starting price, and what each costs after n uses this game
@@ -38,6 +39,19 @@
     retry: { name: 'Second chance', base: 40 },
   };
   const LIFE_KEYS = Object.keys(LIFELINES);
+  // What playing pays. Kept low so one win buys about one lifeline.
+  //   Climb: paid once, at the top of a level. The first climb of a level pays
+  //          by difficulty; climbing it again pays a little, more if it earns
+  //          more stars.
+  //   Daily: per right answer, so a perfect day is one lifeline.
+  //   Quick Play: per right answer, by difficulty (DIFFICULTIES[d].coins) —
+  //          nothing for an answer a lifeline helped with.
+  const PAY = {
+    climbFirst: { easy: 25, normal: 30, hard: 35, xhard: 40 },
+    climbBetter: 10,
+    climbAgain: 5,
+    daily: 5,
+  };
   const noUses = () => ({ fifty: 0, audience: 0, skip: 0, retry: 0 });
   // How often the audience's favourite is the right answer, by difficulty
   const AUDIENCE_RIGHT = { easy: 1, normal: 0.9, hard: 0.75, xhard: 0.6 };
@@ -92,7 +106,7 @@
     uses: noUses(),      // lifelines used this game; sets their prices
     now: {},             // lifelines used on this question: { fifty: true, … }
     retryArmed: false,   // Second chance bought, waiting for a wrong answer
-    helped: false,       // this question was helped (pays half if right)
+    helped: false,       // this question was helped (pays nothing in Quick Play)
     answered: false,
     finished: false,
     item: null,
@@ -137,6 +151,99 @@
     toastTimer = setTimeout(() => { els.toast.hidden = true; }, 1800);
   }
 
+  /* ───────── first-time tips ─────────
+     A new player gets a welcome on the home screen, then a few tips the first
+     time they see a question — each one dims the screen except the thing
+     it's about. saved.tips remembers which have been seen; How to play can
+     clear it to see them again. */
+
+  const TIPS = {
+    answers: {
+      target: () => els.answers,
+      text: () => 'Tap the answer you think is right.' + (run.mode === 'climb'
+        ? ' Each right answer takes you up a rung — reach rung 20 to climb the level.'
+        : run.mode === 'daily' ? ' Five questions, one go, and everyone gets the same ones today.' : ''),
+    },
+    ladder: {
+      target: () => els.ladder,
+      text: () => 'This is your ladder. The gold rungs are safety nets: get a question wrong and you only fall back to the last net you passed.',
+    },
+    lifelines: {
+      target: () => els.lifelines,
+      text: () => 'Stuck? Lifelines help — but they cost coins, and each gets dearer every time you use it. Coins are hard won: a climbed level pays about one.',
+    },
+  };
+  const TIPS_FOR = { climb: ['answers', 'ladder', 'lifelines'], quick: ['answers', 'lifelines'], daily: ['answers'] };
+  let coachQueue = [];
+  let coachKey = null;
+  let coachTotal = 0;
+
+  const coaching = () => !!coachKey;
+
+  function coach(keys) {
+    if (coachKey) return;
+    coachQueue = keys.filter((k) => !saved.tips[k]);
+    coachTotal = coachQueue.length;
+    coachNext();
+  }
+
+  function coachNext() {
+    if (coachKey) { saved.tips[coachKey] = true; persist(); }
+    coachKey = coachQueue.shift() || null;
+    $('coach').hidden = !coachKey;
+    if (!coachKey) return;
+    const done = coachTotal - coachQueue.length;
+    $('coach-text').textContent = TIPS[coachKey].text();
+    $('coach-step').textContent = coachTotal > 1 ? done + ' of ' + coachTotal : '';
+    $('coach-next').textContent = coachQueue.length ? 'Next' : 'Got it';
+    TIPS[coachKey].target().scrollIntoView({ block: 'center' });
+    requestAnimationFrame(placeCoach);
+    $('coach-next').focus({ preventScroll: true });
+  }
+
+  function placeCoach() {
+    if (!coachKey) return;
+    const r = TIPS[coachKey].target().getBoundingClientRect();
+    const pad = 8;
+    const hole = $('coach-hole').style;
+    hole.top = (r.top - pad) + 'px';
+    hole.left = (r.left - pad) + 'px';
+    hole.width = (r.width + pad * 2) + 'px';
+    hole.height = (r.height + pad * 2) + 'px';
+    // the bubble goes on whichever side has more room
+    const bubble = $('coach-bubble').style;
+    if (innerHeight - r.bottom >= r.top) { bubble.top = (r.bottom + pad + 14) + 'px'; bubble.bottom = ''; }
+    else { bubble.bottom = (innerHeight - r.top + pad + 14) + 'px'; bubble.top = ''; }
+  }
+
+  $('coach').addEventListener('click', (e) => {
+    if (e.target.closest('.coach__bubble') && e.target !== $('coach-next')) return;
+    coachNext();
+  });
+  addEventListener('resize', placeCoach);
+  document.querySelector('.app').addEventListener('scroll', placeCoach, { passive: true });
+
+  // The welcome, once, on the home screen — after the phone's saved copy has
+  // had its chance to come back, so a returning player never sees it.
+  let restored = false;
+  function maybeWelcome() {
+    const dialog = $('welcome');
+    if (!restored || !$('screen-home').classList.contains('is-active')) return;
+    if (!saved.tips.welcome && !dialog.open) dialog.showModal();
+  }
+
+  $('welcome').addEventListener('close', () => {
+    saved.tips.welcome = true;
+    persist();
+    if ($('welcome').returnValue === 'climb') startClimb('easy', 1);
+  });
+
+  $('tips-again').addEventListener('click', () => {
+    saved.tips = {};
+    persist();
+    goTo('home');
+  });
+
   function lastCheckpoint(rung) {
     let safe = 0;
     CHECKPOINTS.forEach((c) => { if (rung > c) safe = c; });
@@ -175,7 +282,7 @@
     });
     document.querySelector('.app').scrollTo({ top: 0 });
     clearInterval(ticker);
-    if (name === 'home') drawHome();
+    if (name === 'home') { drawHome(); maybeWelcome(); }
     if (name === 'levels') drawLevels();
     if (name === 'daily') { drawDaily(); ticker = setInterval(drawDaily, 30000); }
     if (name === 'quick') drawQuick();
@@ -491,6 +598,7 @@
     els.result.hidden = true;
     els.result.classList.remove('is-right', 'is-wrong');
     document.querySelector('.app').scrollTo({ top: 0 });
+    coach(TIPS_FOR[run.mode]);
   }
 
   // Put a question on screen with its answers in the given order.
@@ -626,6 +734,13 @@
     return pool[Math.floor(rand() * pool.length)];
   }
 
+  function pay(n) {
+    if (!n) return;
+    saved.coins += n;
+    run.earned += n;
+    replay(els.coins.closest('.stat'), 'is-bump');
+  }
+
   function choose(btn) {
     if (run.answered) return;
     const item = run.item;
@@ -638,6 +753,7 @@
       run.helped = true;
       btn.disabled = true;
       btn.classList.add('is-wrong', 'is-struck');
+      btn.querySelector('.answer__key').textContent = '✕';
       btn.querySelector('.answer__poll')?.remove();
       Sound.wrong();
       buzz('wrong');
@@ -651,21 +767,19 @@
     remember(item);
     els.answers.querySelectorAll('.answer').forEach((b) => {
       b.disabled = true;
-      if (b.dataset.answer === correct) b.classList.add('is-right');
-      else if (b === btn) b.classList.add('is-wrong');
+      // a tick and a cross as well as green and red, for colour-blind players
+      if (b.dataset.answer === correct) { b.classList.add('is-right'); b.querySelector('.answer__key').textContent = '✓'; }
+      else if (b === btn) { b.classList.add('is-wrong'); b.querySelector('.answer__key').textContent = '✕'; }
       else if (!b.classList.contains('is-gone') && !b.classList.contains('is-struck')) b.classList.add('is-dim');
     });
 
     let earned = 0;
-    if (right) {
-      const full = DIFFICULTIES[item.difficulty].coins;
-      earned = run.helped ? Math.ceil(full / 2) : full;
-      saved.coins += earned;
-      run.earned += earned;
-      replay(els.coins.closest('.stat'), 'is-bump');
+    if (right && run.mode !== 'climb') {
+      earned = run.mode === 'daily' ? PAY.daily : run.helped ? 0 : DIFFICULTIES[item.difficulty].coins;
+      pay(earned);
     }
 
-    let title = right ? 'Correct! +' + earned : 'Not quite — it’s ' + correct;
+    let title = right ? (earned ? 'Correct! +' + earned : 'Correct!') : 'Not quite — it’s ' + correct;
     let extra = '';
     let sound = right ? 'right' : 'wrong';
     let last = false;
@@ -680,7 +794,11 @@
           sound = 'win';
           const stars = starsFor(run.falls);
           const key = run.track + '-' + run.level;
-          saved.levels[key] = Math.max(saved.levels[key] || 0, stars);
+          const before = saved.levels[key] || 0;
+          saved.levels[key] = Math.max(before, stars);
+          run.earned = 0;   // a climb pays only here, at the top
+          pay(!before ? PAY.climbFirst[run.track] : stars > before ? PAY.climbBetter : PAY.climbAgain);
+          title += ' +' + run.earned;
           saved.climb = null;
         } else {
           if (CHECKPOINTS.includes(run.rung)) extra = 'Safety net reached — you can’t fall below rung ' + run.rung + ' now.';
@@ -863,6 +981,11 @@
         $('fin-note').textContent = 'Seed ' + q.seed + ' — share it and a friend gets the same quiz.' +
           (before != null && right > before ? ' New best!' : '');
       }
+    }
+    if (run.earned && !saved.tips.earned) {
+      $('fin-note').textContent = ($('fin-note').textContent + ' Spend coins on lifelines — that’s enough for about one.').trim();
+      saved.tips.earned = true;
+      persist();
     }
     $('fin-share').hidden = climb;
     $('fin-share').textContent = daily ? 'Share result' : 'Challenge a friend';
@@ -1179,6 +1302,10 @@
   // Keyboard: 1–4 or A–D to answer, Enter / Space for next. Lifelines:
   // H 50/50, P ask the audience (poll), S swap, R second chance.
   document.addEventListener('keydown', (e) => {
+    if (coaching()) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); coachNext(); }
+      return;
+    }
     if (!$('screen-quiz').classList.contains('is-active') || els.confirm.open || $('report-dialog').open) return;
     const k = e.key.toUpperCase();
     const pick = '1234'.indexOf(k) >= 0 ? '1234'.indexOf(k) : KEYS.indexOf(k);
@@ -1241,6 +1368,8 @@
   // cleared or is older, swap the phone's in before anything else happens.
   Store.restore().then((changed) => {
     if (changed) { saved = Store.load(); applySettings(); drawHome(); }
+    restored = true;
+    maybeWelcome();
     syncReminders();
   });
 })();

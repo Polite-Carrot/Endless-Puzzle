@@ -416,6 +416,41 @@ body {
 .sheet__body { margin: 0 0 18px; color: var(--ink-soft); font-size: 15.5px; line-height: 1.45; }
 .sheet__actions { display: flex; gap: 10px; justify-content: flex-end; margin: 0; }
 
+/* the first-launch welcome */
+.sheet--welcome { text-align: center; }
+.welcome__mark { padding-top: 8px; margin-bottom: 18px; }
+.sheet__actions--stack { flex-direction: column; gap: 10px; }
+
+/* ───────── first-time tips ─────────
+   The screen dims except for a rounded window over the thing the tip is
+   about; the bubble sits above or below it. Tapping anywhere moves on. */
+.coach { position: fixed; inset: 0; z-index: 20; cursor: pointer; }
+.coach[hidden] { display: none; }
+.coach__hole {
+  position: fixed;
+  border-radius: 20px;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 200vmax rgba(43, 33, 66, .62);
+  pointer-events: none;
+  transition: top .25s ease, left .25s ease, width .25s ease, height .25s ease;
+}
+.coach__bubble {
+  position: fixed;
+  left: 16px; right: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  border: var(--stroke) solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 6px 0 var(--ink);
+  cursor: default;
+  animation: rise .3s cubic-bezier(.2, .9, .3, 1.2) both;
+}
+.coach__text { margin: 0 0 12px; font-size: 16px; line-height: 1.45; font-weight: 700; }
+.coach__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.coach__step { color: var(--ink-soft); font-weight: 800; font-size: 14px; }
+
 /* ───────── toast ───────── */
 
 .toast {
@@ -925,6 +960,22 @@ body {
 }
 .marks .is-right { background: var(--grass); }
 .marks .is-wrong { background: var(--danger); }
+/* a tick and a cross as well as the colour, for colour-blind players */
+.marks li, .marks i {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-family: "Baloo 2", sans-serif;
+  font-style: normal;
+  font-weight: 800;
+  font-size: 17px;
+  line-height: 1;
+  -webkit-text-stroke: 3px var(--ink);
+  paint-order: stroke fill;
+}
+.marks .is-right::after { content: '✓'; }
+.marks .is-wrong::after { content: '✕'; }
+.marks--mini i { font-size: 13px; -webkit-text-stroke-width: 2px; }
 .marks[hidden] { display: none; }
 .marks--mini { display: inline-flex; margin: 0; gap: 5px; }
 .marks--mini i { width: 22px; height: 22px; border-radius: 7px; border-width: 2px; box-shadow: 0 2px 0 var(--ink); }
@@ -1458,7 +1509,8 @@ kbd {
 }
 .pay { border-collapse: collapse; margin: 4px 0 10px; }
 .pay td { padding: 3px 14px 3px 0; font-weight: 800; }
-.pay td:last-child { font-family: "Baloo 2", sans-serif; font-size: 17px; }
+.pay td:last-child { font-family: "Baloo 2", sans-serif; font-size: 17px; white-space: nowrap; }
+#tips-again { margin-top: 4px; }
 .pill {
   display: inline-block;
   padding: 1px 10px;

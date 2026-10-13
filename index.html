@@ -7,11 +7,11 @@
 <meta name="theme-color" content="#79cbf2">
 <meta name="apple-mobile-web-app-title" content="Endless Quiz">
 <link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" href="assets/favicon-32.png?v=17" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=17">
+<link rel="icon" href="assets/favicon-32.png?v=18" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png?v=18">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts.css?v=17">
-<link rel="stylesheet" href="styles.css?v=17">
+<link rel="stylesheet" href="fonts.css?v=18">
+<link rel="stylesheet" href="styles.css?v=18">
 </head>
 <body>
 
@@ -25,7 +25,7 @@
       </div>
       <h1>Endless Quiz</h1>
       <p class="masthead__tag">How high can you climb?</p>
-      <span class="purse"><i class="coin" aria-hidden="true"></i><b id="home-coins">100</b> coins</span>
+      <span class="purse"><i class="coin" aria-hidden="true"></i><b id="home-coins">50</b> coins</span>
     </header>
 
     <div class="choices">
@@ -375,13 +375,13 @@
           <span class="lifeline lifeline--mini"><b>50/50</b><span class="lifeline__cost"><i class="coin"></i>25</span></span>
           <span class="lifeline lifeline--mini"><b>Swap</b><span class="lifeline__cost"><i class="coin"></i>30</span></span>
         </div>
-        <h3 class="card__title">Coins &amp; the 50/50</h3>
-        <p>Every right answer earns coins. Harder questions pay more:</p>
+        <h3 class="card__title">Coins &amp; lifelines</h3>
+        <p>Coins are hard won — a win pays about one lifeline:</p>
         <table class="pay">
-          <tr><td><span class="pill" style="--diff:var(--easy)">Easy</span></td><td><i class="coin"></i> 5</td></tr>
-          <tr><td><span class="pill" style="--diff:var(--normal)">Normal</span></td><td><i class="coin"></i> 10</td></tr>
-          <tr><td><span class="pill" style="--diff:var(--hard)">Hard</span></td><td><i class="coin"></i> 15</td></tr>
-          <tr><td><span class="pill" style="--diff:var(--xhard)">Extra Hard</span></td><td><i class="coin"></i> 25</td></tr>
+          <tr><td>Climbing a level for the first time</td><td><i class="coin"></i> 25–40</td></tr>
+          <tr><td>Climbing it again</td><td><i class="coin"></i> 5–10</td></tr>
+          <tr><td>Each right answer in the Daily Quiz</td><td><i class="coin"></i> 5</td></tr>
+          <tr><td>Each right answer in Quick Play</td><td><i class="coin"></i> 1–2</td></tr>
         </table>
         <p>Stuck? Spend coins on a <b>lifeline</b>:</p>
         <ul class="sheet__list">
@@ -390,8 +390,10 @@
           <li><b>Swap</b> trades the question for another just as hard.</li>
           <li><b>Second chance</b>: if your answer is wrong, you get to pick again instead of losing the question.</li>
         </ul>
-        <p>Each lifeline’s price <b>doubles</b> every time you use it in the same game. A question you get right with help pays half. There are no lifelines in the Daily Quiz.</p>
+        <p>Each lifeline’s price <b>doubles</b> every time you use it in the same game. There are no lifelines in the Daily Quiz.</p>
       </article>
+
+      <button id="tips-again" class="btn btn--wide" type="button">Show the first-time tips again</button>
     </div>
   </section>
 
@@ -424,16 +426,41 @@
   </form>
 </dialog>
 
+<dialog id="welcome" class="sheet sheet--welcome" aria-labelledby="welcome-title">
+  <div class="masthead__mark welcome__mark" aria-hidden="true">
+    <span style="--c:#f5423c">?</span><span style="--c:#ffd028">!</span><span style="--c:#3b7bf7">?</span>
+  </div>
+  <h3 id="welcome-title" class="sheet__title">Welcome to Endless Quiz!</h3>
+  <p class="sheet__body">Answer your way up a ladder of 20 questions. Get one wrong and you slip down — but safety nets stop you falling all the way.</p>
+  <p class="sheet__body">The best place to start is the first Easy level.</p>
+  <form method="dialog" class="sheet__actions sheet__actions--stack">
+    <button value="climb" class="btn btn--primary btn--wide">Start climbing &rsaquo;</button>
+    <button value="look" class="btn btn--ghost btn--wide">Look around first</button>
+  </form>
+</dialog>
+
+<!-- a first-time tip: dims the screen except for the thing it's about -->
+<div id="coach" class="coach" hidden>
+  <div class="coach__hole" id="coach-hole"></div>
+  <div class="coach__bubble" id="coach-bubble" role="dialog" aria-modal="true" aria-labelledby="coach-text">
+    <p class="coach__text" id="coach-text"></p>
+    <div class="coach__foot">
+      <span class="coach__step" id="coach-step"></span>
+      <button id="coach-next" class="btn btn--primary" type="button">Got it</button>
+    </div>
+  </div>
+</div>
+
 <p id="toast" class="toast" role="status" hidden></p>
 
-<script src="js/questions.js?v=17"></script>
-<script src="js/bank.js?v=17"></script>
-<script src="js/levels.js?v=17"></script>
-<script src="js/store.js?v=17"></script>
-<script src="js/sound.js?v=17"></script>
-<script src="js/native.js?v=17"></script>
-<script src="js/daily.js?v=17"></script>
-<script src="js/reminders.js?v=17"></script>
-<script src="js/app.js?v=17"></script>
+<script src="js/questions.js?v=18"></script>
+<script src="js/bank.js?v=18"></script>
+<script src="js/levels.js?v=18"></script>
+<script src="js/store.js?v=18"></script>
+<script src="js/sound.js?v=18"></script>
+<script src="js/native.js?v=18"></script>
+<script src="js/daily.js?v=18"></script>
+<script src="js/reminders.js?v=18"></script>
+<script src="js/app.js?v=18"></script>
 </body>
 </html>

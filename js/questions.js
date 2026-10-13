@@ -13,12 +13,13 @@ window.CATEGORIES = {
   general:   { name: 'General',   icon: '💡', colour: '#16c7c0' },
 };
 
-// coins: what a correct answer pays (halved if the 50/50 was used)
+// coins: what a right answer pays in Quick Play (nothing if a lifeline helped).
+// The Climb pays per level and the Daily Quiz per answer — see PAY in app.js.
 window.DIFFICULTIES = {
-  easy:   { name: 'Easy',       coins: 5 },
-  normal: { name: 'Normal',     coins: 10 },
-  hard:   { name: 'Hard',       coins: 15 },
-  xhard:  { name: 'Extra Hard', coins: 25 },
+  easy:   { name: 'Easy',       coins: 1 },
+  normal: { name: 'Normal',     coins: 1 },
+  hard:   { name: 'Hard',       coins: 2 },
+  xhard:  { name: 'Extra Hard', coins: 2 },
 };
 
 window.QUESTIONS = [

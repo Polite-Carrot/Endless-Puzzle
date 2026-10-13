@@ -20,7 +20,7 @@ window.Store = (function () {
   const KEY = 'endless-quiz:v1';
 
   const DEFAULTS = {
-    coins: 100,
+    coins: 50,
     levels: {},              // Climb 'track-level' (e.g. 'normal-4') -> stars earned (1–3)
     track: 'easy',           // the Climb tab last looked at
     climb: null,             // the climb in progress: { track, level, rung, shown, falls, fiftyUses, earned }
@@ -29,6 +29,7 @@ window.Store = (function () {
     quickPrefs: { count: 10, difficulty: 'mixed', cats: null },   // cats null = all
     settings: { sound: true, vibrate: true, explain: true, reminder: false, reminderHour: 18 },
     recent: [],              // last questions answered, newest first: [{ id, mode, at }]
+    tips: {},                // first-time tips already seen: { welcome: true, … }
     savedAt: 0,              // when this copy was written, to tell two copies apart
   };
 
@@ -70,6 +71,8 @@ window.Store = (function () {
         // that no longer exist, so they can't be carried over.
         if (data.climb && !data.climb.track) data.climb = null;
         Object.keys(data.levels).forEach((k) => { if (!k.includes('-')) delete data.levels[k]; });
+        // Players from before the tips existed already know their way round.
+        if (!saved.tips) data.tips = { welcome: true, answers: true, ladder: true, lifelines: true, earned: true };
       }
     } catch (e) { /* unreadable: start fresh rather than crash */ }
     return data;

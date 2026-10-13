@@ -135,8 +135,20 @@ report, now:
 
 ## Coins and lifelines
 
-Correct answers pay coins: Easy 5, Normal 10, Hard 15, Extra Hard 25. Coins
-buy four **lifelines**, in a row under each question:
+Coins are kept scarce on purpose, so that one win buys about one lifeline.
+New players start with 50. What playing pays is set by `PAY` in `js/app.js`
+and the `coins` on each difficulty in `js/questions.js`:
+
+| Earned by | Coins |
+|-----------|------:|
+| Climbing a level the first time | Easy 25, Normal 30, Hard 35, Extra Hard 40 |
+| Climbing it again for more stars | 10 |
+| Climbing it again otherwise | 5 |
+| Each right answer in the Daily Quiz | 5 (25 for a perfect day) |
+| Each right answer in Quick Play | Easy/Normal 1, Hard/Extra Hard 2; nothing if a lifeline helped |
+
+The Climb pays nothing per rung, only at the top. Coins buy four
+**lifelines**, in a row under each question:
 
 | Lifeline | Starts at | What it does |
 |----------|----------:|--------------|
@@ -149,8 +161,8 @@ buy four **lifelines**, in a row under each question:
   50, 100… for the 50/50), and each can be used once per question.
 - Swap is one thing at a time: it can't be used after another lifeline on
   the same question, and the others reset for the new question.
-- A question got right **with help pays half**. A swapped-in question pays
-  in full.
+- In Quick Play, a question got right **with help pays nothing**. A
+  swapped-in question pays as normal.
 - **No lifelines in the Daily Quiz**, so everyone's daily score means the same.
 - Lifeline prices are part of a saved climb, so leaving and coming back
   doesn't reset them.
@@ -209,6 +221,21 @@ Those are distinct facts. **Every category has at least 20 at every
 difficulty**, so a 20-question Quick Play game on a single category never
 runs short — checked by dealing all 40 combinations (8 categories × 4
 difficulties + Mixed) and confirming 20 different questions each time.
+
+## First-time tips
+
+A new player gets a welcome on the home screen that offers to start Easy
+level 1. The first time they see a question, a few tips follow, one at a
+time: the answers, the ladder and its safety nets, and the lifelines. Each
+tip dims everything except what it's about. Which tips have been seen is
+saved in `tips`. Players whose saves are older than the tips are marked as
+having seen them all. How to play has a button to show the tips again.
+The first coins a player earns also come with a note on the results screen
+saying what coins are for.
+
+Right and wrong answers show a ✓ or ✕ as well as green and red, on the
+answer buttons and in the results dots, so they're clear to colour-blind
+players too.
 
 ## Settings
 
