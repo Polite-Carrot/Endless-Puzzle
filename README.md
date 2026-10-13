@@ -14,7 +14,7 @@ Played online at https://polite-carrot.github.io/Endless-Puzzle/ via GitHub Page
 
 **Every release, bump the build number in three places together:** the `?v=`
 on the links in `index.html`, `BUILD` in `js/app.js`, and `version.json`
-(currently 16).
+(currently 17).
 GitHub Pages lets browsers keep files for ten minutes — the page itself
 included — so a phone can keep running an old build. The `?v=` stops a new
 page loading an old stylesheet; `version.json` (fetched uncached on start
@@ -142,20 +142,20 @@ buy four **lifelines**, in a row under each question:
 |----------|----------:|--------------|
 | **50/50** | 25 | Removes two wrong answers. |
 | **Ask the audience** | 20 | Shows how a crowd voted, as a bar on each answer. The crowd's favourite is right every time on Easy, 90% on Normal, 75% on Hard and 60% on Extra Hard — seeded by the question, so asking twice gets the same vote. |
-| **Skip** | 30 | Swaps the question for another of the same difficulty that hasn't come up in this game (and, in Quick Play, from the chosen categories). |
+| **Swap** | 30 | Trades the question for another of the same difficulty that hasn't come up in this game (and, in Quick Play, from the chosen categories). |
 | **Second chance** | 40 | Bought before answering. If your answer is wrong it's struck out and you pick again — no fall in the Climb, no red mark in Quick Play. |
 
 - Each lifeline's price **doubles every time it's used in a game** (so 25,
   50, 100… for the 50/50), and each can be used once per question.
-- Skip is one thing at a time: it can't be used after another lifeline on
+- Swap is one thing at a time: it can't be used after another lifeline on
   the same question, and the others reset for the new question.
-- A question got right **with help pays half**. A skipped-to question pays
+- A question got right **with help pays half**. A swapped-in question pays
   in full.
 - **No lifelines in the Daily Quiz**, so everyone's daily score means the same.
 - Lifeline prices are part of a saved climb, so leaving and coming back
   doesn't reset them.
 
-Keys: `H` 50/50 · `P` ask the audience (poll) · `K` skip · `R` second chance.
+Keys: `H` 50/50 · `P` ask the audience (poll) · `S` swap · `R` second chance.
 
 ## The question bank
 

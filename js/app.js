@@ -18,7 +18,7 @@
  * — answers in the same places — for anyone.
  *
  * Coins are earned by answering and spent on lifelines — 50/50, Ask the
- * audience, Skip and Second chance. Each one's price doubles every time it is
+ * audience, Swap and Second chance. Each one's price doubles every time it is
  * used in a game, each can be used once per question, and a question got
  * right with help pays half — so they're a rescue, not a habit. No lifelines
  * in the Daily Quiz, so everyone's score there means the same thing. */
@@ -27,14 +27,14 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 16;
+  const BUILD = 17;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   // Lifelines: starting price, and what each costs after n uses this game
   const LIFELINES = {
     fifty: { name: '50/50', base: 25 },
     audience: { name: 'Ask the audience', base: 20 },
-    skip: { name: 'Skip', base: 30 },
+    skip: { name: 'Swap', base: 30 },     // shown as "Swap"; 'skip' inside, as saved climbs use it
     retry: { name: 'Second chance', base: 40 },
   };
   const LIFE_KEYS = Object.keys(LIFELINES);
@@ -449,8 +449,8 @@
       b.querySelector('.lifeline__cost span').textContent = price(k);
       b.classList.toggle('is-used', used);
       b.classList.toggle('is-armed', k === 'retry' && run.retryArmed);
-      // Skip makes no sense once a lifeline has already been spent on this
-      // question, and the others none after Skip — keep it one thing at a time.
+      // Swap makes no sense once a lifeline has already been spent on this
+      // question, and the others none after Swap — keep it one thing at a time.
       b.disabled = run.answered || used || saved.coins < price(k) ||
         (k === 'skip' && (run.now.fifty || run.now.audience || run.retryArmed));
     });
@@ -546,9 +546,9 @@
       if (run.mode !== 'climb') run.queue[run.index] = { item: swap, order };
       Sound.fifty();
       render(swap, order);
-      run.now.skip = true;     // one skip per question
+      run.now.skip = true;     // one swap per question
       drawStats();
-      toast('Skipped — here’s another');
+      toast('Swapped — here’s another');
       return;
     }
 
@@ -1177,7 +1177,7 @@
   els.next.addEventListener('click', next);
 
   // Keyboard: 1–4 or A–D to answer, Enter / Space for next. Lifelines:
-  // H 50/50, P ask the audience (poll), K skip, R second chance.
+  // H 50/50, P ask the audience (poll), S swap, R second chance.
   document.addEventListener('keydown', (e) => {
     if (!$('screen-quiz').classList.contains('is-active') || els.confirm.open || $('report-dialog').open) return;
     const k = e.key.toUpperCase();
@@ -1185,8 +1185,8 @@
     if (!run.answered && pick >= 0) {
       const btn = els.answers.querySelectorAll('.answer')[pick];
       if (btn && !btn.disabled) btn.click();
-    } else if (!run.answered && 'HPKR'.includes(k) && k.length === 1) {
-      useLifeline({ H: 'fifty', P: 'audience', K: 'skip', R: 'retry' }[k]);
+    } else if (!run.answered && 'HPSR'.includes(k) && k.length === 1) {
+      useLifeline({ H: 'fifty', P: 'audience', S: 'skip', R: 'retry' }[k]);
     } else if (run.answered && (e.key === 'Enter' || e.key === ' ') && document.activeElement !== els.next) {
       e.preventDefault();
       els.next.click();
