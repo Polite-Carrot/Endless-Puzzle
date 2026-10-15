@@ -28,7 +28,7 @@
 
   const VERSION = '0.5';
   // Must match version.json and the ?v= on index.html's links. Bump all three together.
-  const BUILD = 20;
+  const BUILD = 21;
   const RUNGS = 20;
   const CHECKPOINTS = [4, 8, 12, 16];
   // Lifelines: starting price, and what each costs after n uses this game
