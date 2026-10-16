@@ -4,8 +4,8 @@ A quiz game in the same visual style as Color Match & Merge: bright sky,
 thick ink outlines, hard drop shadows.
 
 **Status: early build.** 100 Climb levels across four difficulty tracks, the Daily Quiz, Quick Play with
-categories and seeds, settings and the guide all work. The bank holds 3,909
-written and fact-table questions plus endless generated maths — at least 125
+categories and seeds, settings and the guide all work. The bank holds 4,735
+written and fact-table questions plus endless generated maths — at least 150
 different facts for every category at every difficulty (maths adds
 thousands of generated sums).
 
@@ -131,7 +131,7 @@ same fact twice in a level. About one slot in eight is generated maths. Its
 report, now:
 
 - 4,000 question slots (100 levels × 20 rungs × main + backup); about 1 in 8 generated
-- 3,462 distinct written/table facts used, each about once across all tracks
+- 3,453 distinct written/table facts used, each about once across all tracks
 - within a track, no fact repeats at all
 
 ## Coins and lifelines
@@ -177,7 +177,7 @@ Questions come from three places, all with the same shape:
 
 | Source | Where | How many |
 |--------|-------|---------:|
-| Written by hand | `js/questions.js` | 3,555 |
+| Written by hand | `js/questions.js` | 4,381 |
 | Fact tables — capitals, elements, planets, baby animals, animal groups, animal kinds, plurals, opposites, spellings, shapes, units and time | `js/bank.js` | 354 |
 | Generators — 22 kinds of maths and Roman numerals | `js/bank.js` | endless |
 
