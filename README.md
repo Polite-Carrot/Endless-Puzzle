@@ -131,7 +131,7 @@ same fact twice in a level. About one slot in eight is generated maths. Its
 report, now:
 
 - 4,000 question slots (100 levels × 20 rungs × main + backup); about 1 in 8 generated
-- 3,446 distinct written/table facts used, each about once across all tracks
+- 3,440 distinct written/table facts used, each about once across all tracks
 - within a track, no fact repeats at all
 
 ## Coins and lifelines
